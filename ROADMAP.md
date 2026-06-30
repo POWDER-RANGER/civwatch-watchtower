@@ -1,6 +1,6 @@
 # CIVWATCH: WATCHTOWER — Development Roadmap
 
-This document outlines the phased development approach for CIVWATCH: WATCHTOWER, aligned with the 11-pipeline architecture defined in `PIPELINES.md`.
+This document outlines the phased development approach for CIVWATCH: WATCHTOWER, aligned with the 11-pipeline architecture defined in `PIPELINES.md` and the module-to-pipeline mapping in `MODULES.md`.
 
 ---
 
@@ -25,6 +25,8 @@ This document outlines the phased development approach for CIVWATCH: WATCHTOWER,
 - [ ] Create database schema documentation
 - [ ] Document deployment procedures
 - [ ] Establish coding standards and conventions
+
+**Deliverable**: Fully configured monorepo with foundational infrastructure and initial documentation.
 
 ---
 
@@ -101,7 +103,7 @@ This document outlines the phased development approach for CIVWATCH: WATCHTOWER,
 
 ---
 
-## Phase 4: Data Ingestion Pipeline (Weeks 11–13)
+## Phase 4: Data Ingestion & Storage (Weeks 11–13)
 
 ### Pipeline 7 Implementation
 - [ ] Set up Prefect ETL orchestration
@@ -151,34 +153,23 @@ This document outlines the phased development approach for CIVWATCH: WATCHTOWER,
 
 ---
 
-## Phase 6: Emergency Services & Scanner Radio (Weeks 17–20)
+## Phase 6: Communications Log (NOAA Only) (Weeks 17–18)
 
-### Pipeline 3 Implementation
-- [ ] Set up RTL-SDR hardware and Trunk Recorder
-- [ ] Build audio ingest endpoint (multipart POST → S3)
-- [ ] Deploy faster-whisper transcription worker (CUDA INT8)
-- [ ] Implement hallucination filter
-- [ ] Build incident type classifier
-- [ ] Wire Redis Pub/Sub between Python worker and Node service
-- [ ] Implement socket.io geo-room join logic
-
-### Scanner Service
-- [ ] Build scanner-service WebSocket fan-out
-- [ ] Implement geofenced event delivery
-- [ ] Build historical log API with pagination
-- [ ] Implement confidence scoring and filtering
+### Slimmed Pipeline 3 Implementation
+- [ ] Build historical log API for NOAA alerts with pagination
+- [ ] Implement confidence scoring and filtering for alerts
 
 ### UI Components
-- [ ] Wire `ScannerCard` to live WebSocket stream
-- [ ] Build scanner event detail view
-- [ ] Implement transcript search and filtering
-- [ ] Build incident timeline visualization
+- [ ] Wire `ScannerCard` (renamed for broader communication context) to live NOAA alert stream
+- [ ] Build alert detail view
+- [ ] Implement alert search and filtering
+- [ ] Build alert timeline visualization
 
-**Deliverable**: Live scanner radio integration with real-time transcription and WebSocket delivery.
+**Deliverable**: Live communications log focused on NOAA weather alerts.
 
 ---
 
-## Phase 7: Community Reporting (Weeks 21–23)
+## Phase 7: Citizen Reports (Weeks 19–21)
 
 ### Pipeline 5 Implementation
 - [ ] Build report submission form (React)
@@ -205,7 +196,7 @@ This document outlines the phased development approach for CIVWATCH: WATCHTOWER,
 
 ---
 
-## Phase 8: Surveillance Mapping (Weeks 24–25)
+## Phase 8: Surveillance Mapping & Visualizations (Weeks 22–24)
 
 ### Pipeline 6 Implementation
 - [ ] Build OpenStreetMap Overpass scraper
@@ -229,7 +220,7 @@ This document outlines the phased development approach for CIVWATCH: WATCHTOWER,
 
 ---
 
-## Phase 9: Anomaly Detection & Scoring (Week 26)
+## Phase 9: Anomaly Detection & Scoring (Weeks 25–26)
 
 ### Pipeline 8 Implementation
 - [ ] Implement DBSCAN incident clustering
@@ -345,12 +336,12 @@ This document outlines the phased development approach for CIVWATCH: WATCHTOWER,
 | Map Engine Live | Week 10 | 3D map with all layers and real-time updates |
 | Data Pipeline Running | Week 13 | Postgres populated with civic data |
 | Political Finance Live | Week 16 | Official profiles, anomaly detection working |
-| Scanner Integration | Week 20 | Real-time transcription and WebSocket delivery |
-| Community Reports | Week 23 | Moderation system and map pins working |
-| Surveillance Mapping | Week 25 | Heatmap and camera registry live |
-| Anomaly Detection | Week 26 | Scoring and clustering operational |
-| Push Notifications | Week 27 | Geofenced alerts firing correctly |
-| Mobile App | Week 32 | iOS and Android apps submitted to stores |
+| Communications Log Live | Week 18 | NOAA alerts integrated and streaming |
+| Citizen Reports Live | Week 21 | Moderation system and map pins working |
+| Surveillance Mapping Live | Week 24 | Heatmap and camera registry live |
+| Anomaly Detection Live | Week 26 | Scoring and clustering operational |
+| Push Notifications Live | Week 27 | Geofenced alerts firing correctly |
+| Mobile App Submitted | Week 32 | iOS and Android apps submitted to stores |
 | Production Deploy | Week 36 | All services running on Kubernetes |
 | Public Launch | Week 37+ | Beta launch to community |
 

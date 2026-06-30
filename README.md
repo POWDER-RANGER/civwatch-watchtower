@@ -38,6 +38,7 @@ The map view emphasizes:
 - **Visualizations**: Heatmaps, overlays, and trend views.
 - **Data Storage**: Historical records and event retention.
 - **Anomaly Detection**: Pattern discovery and signal prioritization.
+- **Political Finance**: Tracking of political contributions, expenditures, and anomaly detection.
 - **Communications Log**: Emergency service and radio activity context.
 
 ## Tech Stack

@@ -3,6 +3,11 @@ import type { HealthResponse } from "@civwatch/types";
 
 export type { HealthResponse };
 
+/**
+ * Build a typed HTTP client. Callers supply baseURL from their own env
+ * (Vite: import.meta.env.VITE_API_URL, Expo: process.env.EXPO_PUBLIC_API_URL, etc.).
+ * This package stays transport-agnostic — no Vite/Expo coupling.
+ */
 export function createClient(baseURL: string = ""): AxiosInstance {
   return axios.create({
     baseURL,
@@ -11,18 +16,11 @@ export function createClient(baseURL: string = ""): AxiosInstance {
   });
 }
 
-const defaultClient = createClient(
-  typeof import.meta !== "undefined" &&
-    (import.meta as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL
-    ? (import.meta as { env: { VITE_API_URL: string } }).env.VITE_API_URL
-    : "",
-);
-
 export async function fetchJSON<T>(
   path: string,
   init?: { method?: string; body?: unknown; client?: AxiosInstance },
 ): Promise<T> {
-  const client = init?.client ?? defaultClient;
+  const client = init?.client ?? createClient();
   const res = await client.request<T>({
     url: path,
     method: init?.method ?? "GET",

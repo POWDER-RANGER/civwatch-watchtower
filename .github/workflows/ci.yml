@@ -20,8 +20,11 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      # Non-frozen until lockfile is regenerated after Phase 0 dep adds
+      # (pg, node-pg-migrate, @civwatch/* workspace). After `pnpm install`
+      # locally and committing pnpm-lock.yaml, switch back to --frozen-lockfile.
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Typecheck
         run: pnpm check

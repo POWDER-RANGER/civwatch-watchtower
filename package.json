@@ -11,8 +11,8 @@
     "preview": "vite preview --host",
     "check": "tsc --noEmit",
     "format": "prettier --write .",
-    "migrate": "node-pg-migrate up --migrations-dir server/db/migrations",
-    "migrate:down": "node-pg-migrate down --migrations-dir server/db/migrations",
+    "migrate": "node-pg-migrate up --migrations-dir server/db/migrations --envPath .env",
+    "migrate:down": "node-pg-migrate down --migrations-dir server/db/migrations --envPath .env",
     "migrate:create": "node-pg-migrate create --migrations-dir server/db/migrations"
   },
   "dependencies": {

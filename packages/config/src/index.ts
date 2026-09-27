@@ -1,4 +1,9 @@
+import { config as loadDotenv } from "dotenv";
 import { z } from "zod";
+
+// Load .env from cwd before validating process.env.
+// Production typically injects env via the platform; .env is for local dev.
+loadDotenv();
 
 const DEV_DATABASE_URL =
   "postgresql://civwatch:changeme@localhost:5432/civwatch";

@@ -1,49 +1,56 @@
 # CIVWATCH: WATCHTOWER — Development Roadmap
 
-This document outlines the phased development approach for CIVWATCH: WATCHTOWER, aligned with the 11-pipeline architecture defined in `PIPELINES.md` and the module-to-pipeline mapping in `MODULES.md`.
+This document outlines the phased development approach for CIVWATCH: WATCHTOWER, aligned with the 11-pipeline architecture defined in `PIPELINES.md`, the module mapping in `MODULES.md`, and the **modular-monolith architecture decision** in `ARCHITECTURE.md`.
+
+> **2026-09-27 update:** Phase 0 checklist revised to match the reconciled architecture (client/server + packages/*, not full microservices). Map engine locked to Mapbox.
 
 ---
 
-## Phase 0: Foundation (Weeks 1–2)
+## Phase 0: Foundation (Weeks 1–2) — IN PROGRESS
 
-### Monorepo Setup
-- [ ] Initialize pnpm workspaces structure
-- [ ] Configure shared TypeScript configuration
-- [ ] Set up shared packages: `@civwatch/ui`, `@civwatch/types`, `@civwatch/utils`
-- [ ] Configure GitHub Actions CI/CD pipeline
-- [ ] Set up Docker Compose for local development
+### Monorepo & layout (reconciled)
+- [x] pnpm workspaces declared at root
+- [x] `client/` (Vite + React) + `server/` (Express) + `packages/*` stubs present
+- [x] Architecture decision recorded (`ARCHITECTURE.md`) — modular monolith first
+- [ ] Flesh out `packages/types`, `packages/ui`, `packages/core`, `packages/api-client`, `packages/config` with real `src/` and exports
+- [ ] Ensure `pnpm-workspace.yaml` (if required) and workspace globs are correct
+- [ ] Shared TypeScript config that packages can extend
 
 ### Infrastructure
-- [ ] Provision PostgreSQL 16 + PostGIS database
-- [ ] Set up Redis instance for caching and pub/sub
-- [ ] Configure S3 or Cloudflare R2 for object storage
-- [ ] Initialize Meilisearch instance for full-text search
-- [ ] Set up environment variable management
+- [x] `docker-compose.yml` defines Postgres+PostGIS, Redis, Meilisearch
+- [ ] Wire Postgres client into `server/` (connection pool + health check)
+- [ ] First SQL migration(s) under `server/db/migrations/`
+- [ ] Env management: `.env.example` + Zod schema in `packages/config`
+- [ ] Redis client available to server (optional for Phase 0, required before rate limiting)
+- [ ] Meilisearch client stub (can wait until search is needed)
+
+### CI/CD
+- [ ] `.github/workflows/ci.yml` — install, typecheck (`pnpm check`), optional lint
+- [ ] Branch protection / required checks (optional early)
 
 ### Documentation
-- [ ] Complete API specification document
-- [ ] Create database schema documentation
-- [ ] Document deployment procedures
-- [ ] Establish coding standards and conventions
+- [x] PIPELINES.md, ROADMAP.md, MODULES.md, ARCHITECTURE.md, STATUS.md
+- [ ] API specification (OpenAPI stub or markdown)
+- [ ] Database schema documentation (generated from migrations preferred)
 
-**Deliverable**: Fully configured monorepo with foundational infrastructure and initial documentation.
+**Deliverable**: Working docker-compose stack, server that can talk to Postgres, packages importable, minimal CI green.
 
 ---
 
 ## Phase 1: Authentication & Authorization (Weeks 3–4)
 
 ### Pipeline 9 Implementation
-- [ ] Initialize Supabase project with JWT configuration
+- [ ] Initialize Supabase project with JWT configuration (or document self-hosted alternative)
 - [ ] Implement custom JWT role claim hook
 - [ ] Set up Row-Level Security (RLS) policies
-- [ ] Build authentication service with refresh token logic
-- [ ] Implement role-based access control (RBAC)
+- [ ] Build authentication routes in `server/routes/auth.ts` with refresh token logic
+- [ ] Implement role-based access control (RBAC) middleware
 
 ### User Management
 - [ ] Create user profile schema and endpoints
 - [ ] Build email verification workflow
 - [ ] Implement password reset functionality
-- [ ] Set up device token management for push notifications
+- [ ] Set up device token management for push notifications (stub)
 
 **Deliverable**: Fully functional authentication system with role-based access control.
 
@@ -52,7 +59,7 @@ This document outlines the phased development approach for CIVWATCH: WATCHTOWER,
 ## Phase 2: Dashboard Foundation (Weeks 5–7)
 
 ### Pipeline 2 Implementation
-- [ ] Build `DashCard` base component with glassmorphism styling
+- [ ] Build `DashCard` base component with glassmorphism styling (`packages/ui`)
 - [ ] Implement skeleton loaders for all card types
 - [ ] Create `CardDrawer` swipe-up component with Framer Motion
 - [ ] Build responsive layout for map + dashboard shell
@@ -79,14 +86,14 @@ This document outlines the phased development approach for CIVWATCH: WATCHTOWER,
 ## Phase 3: Map Engine (Weeks 8–10)
 
 ### Pipeline 1 Implementation
-- [ ] Set up Mapbox GL JS v3 integration
+- [ ] Set up Mapbox GL JS v3 integration (replace Google Maps template in `Map.tsx`)
 - [ ] Create custom Mapbox Studio style (dark purple/blue, 3D buildings)
 - [ ] Implement 3D building extrusion layer
 - [ ] Build custom avatar marker component with glow effects
 - [ ] Create category layer toggle bar (Incidents, Reports, Cameras, Officials, Footsteps, History)
 
 ### Map Features
-- [ ] Implement bbox-based GeoJSON feature fetching
+- [ ] Implement bbox-based GeoJSON feature fetching (`server/routes/map.ts`)
 - [ ] Build incident circle layer
 - [ ] Build camera heatmap layer
 - [ ] Build report pin layer
@@ -106,7 +113,7 @@ This document outlines the phased development approach for CIVWATCH: WATCHTOWER,
 ## Phase 4: Data Ingestion & Storage (Weeks 11–13)
 
 ### Pipeline 7 Implementation
-- [ ] Set up Prefect ETL orchestration
+- [ ] Set up ETL orchestration (Prefect or equivalent scripts under `workers/`)
 - [ ] Build FEC candidate and transaction ingest workers
 - [ ] Build ProPublica Congress voting record ingest
 - [ ] Build OpenSecrets contribution ingest
@@ -160,7 +167,7 @@ This document outlines the phased development approach for CIVWATCH: WATCHTOWER,
 - [ ] Implement confidence scoring and filtering for alerts
 
 ### UI Components
-- [ ] Wire `ScannerCard` (renamed for broader communication context) to live NOAA alert stream
+- [ ] Wire `ScannerCard` to live NOAA alert stream
 - [ ] Build alert detail view
 - [ ] Implement alert search and filtering
 - [ ] Build alert timeline visualization
@@ -173,7 +180,7 @@ This document outlines the phased development approach for CIVWATCH: WATCHTOWER,
 
 ### Pipeline 5 Implementation
 - [ ] Build report submission form (React)
-- [ ] Implement file upload to S3
+- [ ] Implement file upload to S3/R2
 - [ ] Build Postgres report storage with PostGIS location
 - [ ] Implement auto-classifier (keyword matching → type)
 - [ ] Build admin moderation panel
@@ -265,7 +272,7 @@ This document outlines the phased development approach for CIVWATCH: WATCHTOWER,
 ## Phase 11: Mobile Application (Weeks 28–32)
 
 ### Expo Setup
-- [ ] Initialize Expo 52 project with file-based routing
+- [ ] Initialize Expo 52 project under `apps/mobile` with file-based routing
 - [ ] Configure iOS and Android build profiles
 - [ ] Set up EAS (Expo Application Services)
 
@@ -287,12 +294,12 @@ This document outlines the phased development approach for CIVWATCH: WATCHTOWER,
 
 ## Phase 12: Deployment & Scaling (Weeks 33–36)
 
-### Pipeline 11 Implementation
-- [ ] Build Docker images for all services
-- [ ] Create Kubernetes Helm charts
-- [ ] Set up Cloudflare Pages for web frontend
-- [ ] Configure CI/CD GitHub Actions workflows
-- [ ] Implement blue-green deployment strategy
+### Packaging
+- [ ] Build Docker images for client + server (+ workers if present)
+- [ ] Create Kubernetes Helm charts **only if** multi-service extraction has begun
+- [ ] Set up Cloudflare Pages (or equivalent) for web frontend
+- [ ] Configure production CI/CD GitHub Actions workflows
+- [ ] Implement blue-green or rolling deployment strategy
 
 ### Monitoring & Observability
 - [ ] Set up application performance monitoring (APM)
@@ -328,12 +335,13 @@ This document outlines the phased development approach for CIVWATCH: WATCHTOWER,
 
 ## Key Milestones
 
-| Milestone | Target Date | Criteria |
+| Milestone | Target | Criteria |
 |---|---|---|
-| Foundation Complete | Week 2 | Monorepo, infrastructure, CI/CD ready |
+| Architecture reconciled | Done (2026-09-27) | ADR + STATUS + aligned docs |
+| Foundation Complete | Week 2 | Packages exportable, Postgres wired, CI green |
 | Auth System Live | Week 4 | User authentication and RBAC functional |
 | Dashboard MVP | Week 7 | All cards rendered, mocked data working |
-| Map Engine Live | Week 10 | 3D map with all layers and real-time updates |
+| Map Engine Live | Week 10 | Mapbox 3D map with layers and real-time updates |
 | Data Pipeline Running | Week 13 | Postgres populated with civic data |
 | Political Finance Live | Week 16 | Official profiles, anomaly detection working |
 | Communications Log Live | Week 18 | NOAA alerts integrated and streaming |
@@ -342,7 +350,7 @@ This document outlines the phased development approach for CIVWATCH: WATCHTOWER,
 | Anomaly Detection Live | Week 26 | Scoring and clustering operational |
 | Push Notifications Live | Week 27 | Geofenced alerts firing correctly |
 | Mobile App Submitted | Week 32 | iOS and Android apps submitted to stores |
-| Production Deploy | Week 36 | All services running on Kubernetes |
+| Production Deploy | Week 36 | Services running in production |
 | Public Launch | Week 37+ | Beta launch to community |
 
 ---
@@ -364,17 +372,18 @@ This document outlines the phased development approach for CIVWATCH: WATCHTOWER,
 | Risk | Impact | Mitigation |
 |---|---|---|
 | Data source API changes | High | Monitor API status pages, build abstraction layer |
-| Scanner hardware failures | High | Redundant RTL-SDR setup, Broadcastify fallback |
-| Database performance | High | PostGIS indexing, TimescaleDB for time-series |
+| Scanner hardware failures | High | Redundant RTL-SDR setup, Broadcastify fallback (when enabled) |
+| Database performance | High | PostGIS indexing, TimescaleDB for time-series if needed |
 | Moderation overload | Medium | Auto-classification, community verification system |
 | Privacy concerns | High | Anonymization options, clear data policies |
 | Regulatory compliance | High | Legal review, GDPR/CCPA compliance |
+| Premature microservices | Medium | Follow ADR; extract only on proven need |
 
 ---
 
 ## Resource Requirements
 
-### Team Composition
+### Team Composition (aspirational)
 - **Backend Engineers**: 2–3 (Node.js, Python, PostgreSQL)
 - **Frontend Engineers**: 2 (React, React Native)
 - **DevOps Engineer**: 1 (Docker, Kubernetes, CI/CD)
@@ -383,23 +392,22 @@ This document outlines the phased development approach for CIVWATCH: WATCHTOWER,
 - **Community Manager**: 1
 - **Legal/Compliance**: 1 (part-time)
 
-### Infrastructure Costs (Estimated Monthly)
-- PostgreSQL + PostGIS: $200–500
-- Redis: $50–100
-- S3/R2 Storage: $100–300
-- Mapbox: $200–500
-- Tomorrow.io Weather: $100–200
-- Firebase/APNs: $50–100
-- Kubernetes hosting: $500–1,000
-- **Total**: ~$1,200–2,700/month
+### Infrastructure Costs (Estimated Monthly, early stage)
+- PostgreSQL + PostGIS: $0–200 (local / small managed)
+- Redis: $0–50
+- S3/R2 Storage: $5–50
+- Mapbox: $0–200 (free tier first)
+- Tomorrow.io Weather: $0–100
+- Firebase/APNs: $0–50
+- Hosting: $20–200
+- **Total early**: ~$25–650/month
 
 ---
 
-## Next Steps
+## Next Steps (immediate)
 
-1. **Week 1**: Begin Phase 0 (Foundation) — set up monorepo and infrastructure
-2. **Week 3**: Start Phase 1 (Auth) — implement authentication system
-3. **Week 5**: Begin Phase 2 (Dashboard) — build dashboard shell and cards
-4. **Week 8**: Start Phase 3 (Map) — implement Mapbox integration
+1. Complete remaining Phase 0 items in `STATUS.md` (Postgres wire-up, package skeletons, CI).
+2. Begin Phase 1 (Auth) once Phase 0 checklist is green.
+3. Keep docs and code in the same commit whenever a Phase item is finished.
 
-For detailed implementation guidance, refer to `PIPELINES.md` for each pipeline's technical specifications.
+For detailed implementation guidance, refer to `PIPELINES.md` and `ARCHITECTURE.md`.

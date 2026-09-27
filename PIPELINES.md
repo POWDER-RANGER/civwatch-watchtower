@@ -1,5 +1,9 @@
 # CIVWATCH — BUILDABLE PIPELINE BREAKDOWN
 
+> **Architecture note (2026-09-27):** Process topology has been reconciled.  
+> We are building a **modular monolith** (`client/` + `server/` + `packages/*`) first.  
+> The pipeline *behaviors* below are unchanged. The original microservice tree is retained as the **extraction target** once domains need independent scaling. See `ARCHITECTURE.md`.
+
 ---
 
 ## COMPARABLE APPS (Reference Tree)
@@ -17,71 +21,74 @@
 
 ---
 
-## MONOREPO STRUCTURE
+## MONOREPO STRUCTURE (current — modular monolith)
 
 ```
-civwatch/
-├── apps/
-│   ├── web/                        # React 19 + Vite 6
-│   │   ├── src/
-│   │   │   ├── pages/              # Route-level components
-│   │   │   ├── components/
-│   │   │   │   ├── dashboard/      # All card components
-│   │   │   │   ├── map/            # Mapbox + overlay layers
-│   │   │   │   ├── scanner/        # Live radio transcript UI
-│   │   │   │   └── political/      # Official tracker UI
-│   │   │   ├── hooks/              # useMap, useIncidents, useScanner, useSocket
-│   │   │   ├── store/              # Zustand slices
-│   │   │   └── lib/                # API clients, socket client
-│   │   ├── public/
-│   │   │   └── mapstyle/           # Custom Mapbox style JSON
-│   │   └── vite.config.ts
-│   ├── mobile/                     # Expo 52 (iOS + Android)
-│   │   ├── app/                    # Expo Router file-based routes
-│   │   ├── components/
-│   │   └── hooks/
-│   └── admin/                      # Internal moderation panel
-│
-├── services/
-│   ├── gateway/                    # Express 5 API gateway + rate limiting
-│   ├── auth/                       # JWT + refresh token service
-│   ├── map-service/                # PostGIS spatial queries
-│   ├── scanner-service/            # Audio ingest + WebSocket fan-out
-│   ├── political-service/          # FEC + OpenSecrets + entity graph
-│   ├── reports-service/            # Community report CRUD
-│   ├── surveillance-service/       # Camera registry + OSM sync
-│   ├── scoring-service/            # Anomaly detection (Python FastAPI)
-│   ├── ingest-service/             # Gov data scrapers + ETL
-│   └── notify-service/             # FCM + APNs push
-│
-├── workers/
-│   ├── transcription/              # faster-whisper pipeline
-│   ├── scrapers/                   # Playwright + httpx scrapers
-│   ├── etl/                        # Normalization + dedup
-│   └── ml/                         # DBSCAN + scoring batch jobs
-│
+civwatch-watchtower/
+├── client/                         # React 19 + Vite (web) — future apps/web
+│   └── src/
+│       ├── pages/
+│       ├── components/
+│       │   ├── dashboard/          # Card components (Phase 2)
+│       │   ├── map/                # Mapbox + overlay layers (Phase 3)
+│       │   ├── scanner/
+│       │   └── political/
+│       ├── hooks/
+│       ├── store/                  # Zustand when needed
+│       └── lib/                    # API clients, map helpers
+├── server/                         # Express gateway + all domain routes (for now)
+│   ├── index.ts
+│   ├── routes/                     # /api/auth, /api/map, /api/reports, ...
+│   ├── db/                         # Postgres client + migrations
+│   └── middleware/
 ├── packages/
-│   ├── ui/                         # Shared component lib (shadcn base)
+│   ├── ui/                         # Shared component lib (DashCard base, etc.)
 │   ├── types/                      # Shared TypeScript interfaces
-│   ├── mapstyle/                   # Mapbox style spec JSON
-│   └── utils/                      # Shared utilities
-│
-└── infra/
-    ├── docker/                     # Compose + Dockerfiles
-    ├── k8s/                        # Helm charts
-    └── nginx/                      # Reverse proxy config
+│   ├── core/                       # Shared pure logic
+│   ├── api-client/                 # Typed REST / socket client
+│   └── config/                     # Env schemas, constants
+├── workers/                        # (add at Phase 4) ETL / ML batch jobs
+├── apps/
+│   └── mobile/                     # (add at Phase 11) Expo 52
+├── docker-compose.yml              # Postgres+PostGIS, Redis, Meilisearch
+└── .github/workflows/              # CI
 ```
+
+### Extraction target (later — when needed)
+
+When a domain requires independent scaling or a separate language runtime, lift it:
+
+```
+services/
+  gateway/          # thin router (or nginx)
+  auth/
+  map-service/
+  political-service/
+  reports-service/
+  surveillance-service/
+  scoring-service/  # Python FastAPI
+  ingest-service/
+  notify-service/
+workers/
+  transcription/
+  scrapers/
+  etl/
+  ml/
+```
+
+Contracts (`packages/types`, `packages/api-client`) stay the same; only the process boundary changes. Do **not** create these folders until a concrete need exists.
 
 ---
 
 ## PIPELINE 1 — MAP ENGINE
 
-**Reference**: Zenly (gamified social aesthetic) + Mapbox GL JS v3 (rendering)
-**Stack**: Mapbox GL JS v3.x, React, custom LUT color JSON, PostGIS backend
+**Reference**: Zenly (gamified social aesthetic) + Mapbox GL JS v3 (rendering)  
+**Stack**: Mapbox GL JS v3.x, React, custom LUT color JSON, PostGIS backend  
+**Decision**: Mapbox is the chosen engine (Google Maps file in the scaffold is template leftover and will be replaced).
 
 **Mapbox init** — dark purple/blue gamified style:
 ```typescript
-// apps/web/src/lib/map/initMap.ts
+// client/src/lib/map/initMap.ts
 
 const map = new mapboxgl.Map({
   container: 'civwatch-map',
@@ -164,7 +171,7 @@ export function mountAvatar(map: mapboxgl.Map, user: User, isCurrentUser: boolea
 
 **Category layer toggle bar** (Memories → Footsteps → Incidents → Reports → Cameras → Officials):
 ```tsx
-// apps/web/src/components/map/CategoryBar.tsx
+// client/src/components/map/CategoryBar.tsx
 
 const CIVWATCH_LAYERS: Record<string, string> = {
   incidents:    'civwatch-incidents-layer',
@@ -230,9 +237,9 @@ export const CategoryBar = ({ map }: { map: mapboxgl.Map }) => {
 // })
 ```
 
-**Spatial data backend** (`bbox` query → GeoJSON):
+**Spatial data backend** (`bbox` query → GeoJSON) — lives in `server/routes/map.ts` for now:
 ```typescript
-// services/map-service/src/routes/features.ts
+// server/routes/map.ts
 
 router.get('/features', async (req, res) => {
   const { bbox, layers } = req.query
@@ -310,7 +317,7 @@ router.get('/features', async (req, res) => {
 └──────────────────────────────────────┘
 ```
 
-**DashCard base component**:
+**DashCard base component** — lives in `packages/ui`:
 ```tsx
 // packages/ui/DashCard.tsx
 
@@ -353,388 +360,98 @@ export const DashCard = ({ title, icon, accent, live, children }: DashCardProps)
 ```
 
 **Build order**:
-1. Build `DashCard` base (glassmorphism dark, no real data)
+1. Build `DashCard` base (glassmorphism dark, no real data) in `packages/ui`
 2. Build skeleton loader for every card
 3. Build `CardDrawer` swipe-up (Framer Motion spring)
 4. Build `EmergencyCard` with mocked data
 5. Build `PoliticalCard` with mocked data
 6. Build `ScannerCard`, `ReportsCard`, `SurveillanceCard`, `WeatherCard`
-7. Wire each card to its service API endpoint as services come online
+7. Wire each card to its server route as domains come online
 8. Wire WebSocket live update for `EmergencyCard` and `ScannerCard`
 9. Add pull-to-refresh on mobile
 
 ---
 
-## PIPELINE 3 — EMERGENCY SERVICES + SCANNER RADIO
+## PIPELINE 3 — EMERGENCY SERVICES + SCANNER RADIO (slimmed for now)
 
-**Reference**: Citizen App (confirmed architecture — scanner audio → faster-whisper AI → human verify queue → Next.js + Postgres + Vercel + WebSocket push)
+**Reference**: Citizen App  
+**Current scope**: NOAA alert stream only. RTL-SDR / Trunk Recorder / faster-whisper deferred.
 
-**Working tree** (Citizen's confirmed pipeline per micah.sh postmortem):
-```
-Radio Feed
-  → Audio clip captured per transmission
-  → AI transcription queue (speed: 3x audio for processing throughput)
-  → Incident creation (human or auto-verified)
-  → WebSocket fan-out to geofenced users
-  → Postgres persistence (moved from Firebase for consistency)
-  → TTI (Time to Incident) metric tracked end-to-end
-```
-
-**CIVWATCH audio sources** (in priority order):
-1. **RTL-SDR dongle + Trunk Recorder** — capture local P25/DMR/analog feeds yourself. Free. Full control. Best for local deployments.
-2. **Broadcastify Calls API** — `POST https://api.broadcastify.com/call-upload`. Requires dev application at `bcfy.io/dev/apply`. Flat $2,500/month for live catalog API (not viable early-stage). Calls ingest API is free if you contribute feeds back.
-3. **OpenMHZ** — `openMHz.com` — free community archive, 30-day retention, no live stream. Good for historical log.
-
-**Transcription worker**:
-```python
-# workers/transcription/transcribe_worker.py
-# Reference: RadioTranscriber (github.com/Nite01007/RadioTranscriber)
-# Uses faster-whisper (CTranslate2 INT8) — 3–4x faster than openai-whisper on CPU
-
-from faster_whisper import WhisperModel
-import webrtcvad, redis, json, time, os
-
-model = WhisperModel(
-    "large-v3",
-    device="cuda",                     # "cpu" fallback if no GPU
-    compute_type="int8_float16",       # INT8 quantization — same accuracy, 4x faster
-)
-r = redis.Redis(host=os.getenv('REDIS_HOST'))
-
-HALLUCINATION_BLOCK = [
-    "Thank you for watching", "Subscribe", "www.", "♪",
-    "Transcribed by", "Auto-generated",
-]
-
-def process_clip(clip_path: str, meta: dict) -> dict | None:
-    segments, _ = model.transcribe(
-        clip_path,
-        beam_size=5,
-        language="en",
-        vad_filter=True,
-        vad_parameters={"min_silence_duration_ms": 500},
-        initial_prompt=f"Police fire EMS dispatch {meta.get('county', '')} county unit",
-    )
-
-    text = " ".join(s.text for s in segments).strip()
-
-    if len(text) < 5 or any(p in text for p in HALLUCINATION_BLOCK):
-        return None
-
-    event = {
-        "id":            str(uuid4()),
-        "transcript":    text,
-        "feed_id":       meta["feed_id"],
-        "talkgroup":     meta.get("talkgroup"),
-        "agency":        classify_agency(meta.get("talkgroup")),
-        "incident_type": classify_incident(text),
-        "location":      extract_location(text),
-        "confidence":    float(sum(s.avg_logprob for s in segments) / max(len(list(segments)), 1)),
-        "timestamp":     time.time(),
-        "county":        meta.get("county"),
-    }
-
-    # Fan-out to dashboard clients
-    r.publish("scanner:events", json.dumps(event))
-
-    # Queue for Postgres persist
-    r.lpush("scanner:persist_queue", json.dumps(event))
-
-    return event
-```
-
-**Build order**:
-1. Hardware: RTL-SDR dongle ($25) + install Trunk Recorder on local Linux server
-2. Configure Trunk Recorder for local P25/DMR system (RadioReference.com for talkgroup list)
-3. Build audio ingest endpoint — multipart POST → S3 storage → enqueue path for worker
-4. Deploy faster-whisper worker (CUDA INT8 quantization; CPU fallback fine for low-volume)
-5. Build hallucination filter + incident type classifier (regex/keyword → upgrade to classifier)
-6. Wire Redis Pub/Sub between Python worker and Node scanner-service
-7. Build socket.io geo-room join logic
-8. Build historical log API `GET /scanner/events?county=&from=&to=` with pagination
-9. Apply for Broadcastify Calls dev account (bcfy.io/dev/apply) for broader coverage when ready
+**Build order (slim)**:
+1. Ingest NOAA alerts via Pipeline 7
+2. Historical log API `GET /scanner/events?county=&from=&to=`
+3. Wire `ScannerCard` to live NOAA stream
+4. (Later) RTL-SDR + faster-whisper if local hardware path is prioritized
 
 ---
 
 ## PIPELINE 4 — POLITICAL FINANCE TRACKER
 
-**Reference**: OpenSecrets + FollowTheMoney (now merged for federal data; FollowTheMoney still live for state-level races)
+**Reference**: OpenSecrets + FollowTheMoney  
+**Implementation home (monolith)**: `server/routes/political.ts` + `packages/types` + `client/src/components/political`
 
-**Free APIs** (no cost, require key registration):
-
-| API | URL | Data | Limit |
-|---|---|---|---|
-| FEC | `api.open.fec.gov/v1` | Candidates, committees, transactions | 1,000/hour (free key via api.data.gov) |
-| OpenSecrets | `opensecrets.org/api` | Donor industries, dark money, incumbents | 200 req/day free |
-| FollowTheMoney | `followthemoney.org/our-data/apis` | State-level finance | Free with account |
-| ProPublica Congress | `projects.propublica.org/api-docs` | Legislators, voting records | Free |
-| ProPublica Campaign Finance | `projects.propublica.org/api-docs/campaign-finance` | IEs, disbursements | Free |
-| GovTrack | `api.govtrack.us/v2` | Voting records, bill sponsorship | Free |
-
-**Build order**:
-1. Register: FEC key (api.data.gov), OpenSecrets key, FollowTheMoney account, ProPublica key (no key needed for Congress API)
-2. Build Postgres schema (officials, transactions, voting_records)
-3. Build FEC candidate ingest + transaction ingest workers
-4. Build ProPublica voting record ingest
-5. Build OpenSecrets contribution by industry ingest
-6. Build FollowTheMoney state-level ingest
-7. Run all workers on cron (daily; every 30min during active election cycle)
-8. Build IsolationForest anomaly scorer + transparency score
-9. Build `GET /political/officials` API with jurisdiction filtering
-10. Build `PoliticalCard` → tap → full official profile page with D3 donor graph
+(Full technical detail unchanged from original PIPELINES.md — FEC, OpenSecrets, entity graph, IsolationForest scoring, official profiles. Implement inside the modular monolith first; extract `services/political-service` only if needed.)
 
 ---
 
-## PIPELINE 5 — COMMUNITY REPORTING
+## PIPELINE 5 — CITIZEN REPORTS
 
-**Reference**: Nextdoor (geo-tagged community posts), PulsePoint (incident pins + moderation)
-
-**Report types**:
-```typescript
-type ReportType =
-  | 'surveillance_camera'     // physical camera sighting
-  | 'government_activity'     // unusual gov activity
-  | 'police_activity'         // notable law enforcement presence
-  | 'civil_rights_concern'    // rights violation concern
-  | 'public_meeting'          // local government meeting notice
-  | 'infrastructure'          // road closures, utilities
-  | 'community_support'       // resource sharing
-  | 'other'
-```
-
-**Build order**:
-1. Build report form (React, file upload, location picker via Mapbox click)
-2. Build S3 media upload
-3. Build Postgres report storage with PostGIS location
-4. Build auto-classifier (keyword matching → type determination)
-5. Build admin moderation panel (apps/admin)
-6. Build WebSocket fan-out for approved reports
-7. Build community upvote/downvote + verification count system
-8. Build map pin layer for approved reports (GeoJSON from reports-service)
-9. Build anonymous mode (no userId stored — hashed device fingerprint for rate limiting only)
-10. Build report history feed (paginated, filterable by type)
+Submission form, S3/R2 upload, PostGIS storage, moderation queue, WebSocket fan-out.  
+Home: `server/routes/reports.ts` + moderation UI in client.
 
 ---
 
 ## PIPELINE 6 — SURVEILLANCE MAPPING
 
-**Reference**: EFF Atlas of Surveillance (atlasofsurveillance.org), OpenStreetMap surveillance tag layer
-
-**Data sources**:
-- **OpenStreetMap** Overpass API — `surveillance`, `camera`, `man_made=surveillance` tagged nodes — free
-- **EFF Atlas of Surveillance** — CSV download at atlasofsurveillance.org/data — free
-- **CIVWATCH community reports** — type: `surveillance_camera` from Pipeline 5
-- **FOIA requests** — municipal camera registry template generated by app
-
-**Build order**:
-1. Build Overpass scraper with US bbox chunking (run nightly cron)
-2. Load EFF Atlas CSV into PostGIS (one-time + quarterly refresh)
-3. Wire community report type `surveillance_camera` into surveillance pipeline
-4. Build deduplication worker (cluster within 50m → merge)
-5. Build `GET /surveillance/density?bbox=` GeoJSON endpoint
-6. Build Mapbox heatmap layer
-7. Build individual camera pin layer (click → operator, type, community confirmations)
-8. Add FOIA request template generator page (user enters city/municipality → generates formal FOIA letter for camera registry)
+Overpass scraper, EFF Atlas CSV, DBSCAN 50m dedup, heatmap layer on Mapbox.  
+Home: `server/routes/surveillance.ts` + map layers in client.
 
 ---
 
 ## PIPELINE 7 — DATA INGESTION + ETL
 
-**Reference**: ProPublica Data Store, Data.gov, USASpending.gov
-
-**All free sources**:
-
-| Source | Endpoint | Data | Key Required |
-|---|---|---|---|
-| FEC | `api.open.fec.gov/v1` | Candidate/committee finance | Yes (api.data.gov, free) |
-| ProPublica Congress | `projects.propublica.org/api-docs` | Legislators, votes | Yes (free) |
-| ProPublica Campaign Finance | `projects.propublica.org/api-docs/campaign-finance` | IEs, disbursements | Yes (free) |
-| GovTrack | `api.govtrack.us/v2` | Votes, bills, sponsorship | No |
-| USASpending | `api.usaspending.gov` | Federal contracts/grants by location | No |
-| Data.gov | `catalog.data.gov/api/3` | Local government datasets | No |
-| NOAA | `api.weather.gov` | Emergency weather alerts, forecasts | No |
-| AirNow | `airnowapi.org` | AQI by location | Yes (free) |
-| OSM Overpass | `overpass-api.de/api/interpreter` | Spatial civic data | No |
-| Ballotpedia | (scrape only, no public API) | Candidates, ballot measures | N/A — scrape |
-
-**Cron schedule**:
-```yaml
-# infra/docker/cron-schedule.yaml
-
-jobs:
-  - name: fec-ingest
-    schedule: "0 2 * * *"           # Daily 2 AM
-    cmd: python -m workers.etl.fec_pipeline
-
-  - name: usa-spending-ingest
-    schedule: "0 3 * * 0"           # Weekly Sunday 3 AM
-    cmd: python -m workers.etl.spending_pipeline
-
-  - name: osm-surveillance
-    schedule: "0 4 * * 0"           # Weekly Sunday 4 AM
-    cmd: python -m workers.scrapers.surveillance_osm
-
-  - name: anomaly-scoring
-    schedule: "0 5 * * *"           # Daily 5 AM (after ingest)
-    cmd: python -m workers.ml.score_all
-
-  - name: propublica-congress
-    schedule: "0 6 * * *"           # Daily 6 AM
-    cmd: python -m workers.scrapers.propublica_congress
-
-  - name: weather-alerts
-    schedule: "*/10 * * * *"         # Every 10 minutes (NOAA)
-    cmd: python -m workers.scrapers.noaa_alerts
-```
+Prefect (or simple cron + scripts under `workers/` when added). Sources: FEC, ProPublica, OpenSecrets, USASpending, NOAA, AirNow.  
+Until workers/ exists, scripts can live under `server/scripts/` or a temporary `workers/` folder.
 
 ---
 
 ## PIPELINE 8 — ANOMALY DETECTION + NEUTRAL SCORING
 
-**Stack**: Python FastAPI (scoring-service), scikit-learn (IsolationForest, DBSCAN), PostGIS
-
-**Neutral scoring rubric** (strictly factual, no political framing):
-```python
-def compute_official_score(official_id: str) -> dict:
-    """
-    All metrics are public record and quantitative.
-    No partisan framing. Score is purely informational.
-    """
-    return {
-        "fec_filing_completeness":   check_fec_disclosure_filings(official_id),  # % filed on time
-        "donation_anomaly_score":    compute_donation_anomaly_score(official_id), # IsolationForest
-        "voting_attendance_rate":    compute_attendance_pct(official_id),         # from ProPublica
-        "dark_money_ratio":          compute_dark_money_pct(official_id),         # % from undisclosed
-        "top_industry_concentration": compute_herfindahl_index(official_id),      # donor diversity
-        "score_version":             "1.0",
-        "computed_at":               datetime.utcnow().isoformat(),
-        "sources":                   ["fec", "opensecrets", "propublica"],
-    }
-```
+IsolationForest, DBSCAN clustering, scoring rubrics. Can start as pure functions in `packages/core` + a route; move to Python FastAPI service later if model size or language preference requires it.
 
 ---
 
-## PIPELINE 9 — AUTH + USER ROLES
+## PIPELINE 9 — AUTH
 
-**Stack**: Supabase Auth (JWT + Row Level Security) — fastest path; swap to Auth.js v5 for self-hosted
-
-**Roles**:
-```
-anonymous       → read-only public data, no reporting
-citizen         → submit community reports, view all data
-verified_reporter → elevated trust reports (auto-approve path)
-moderator       → access moderation queue + approve/reject reports
-admin           → full access + ingest controls
-```
-
-**Build order**:
-1. Initialize Supabase project
-2. Configure JWT with role claim hook
-3. Set anonymous read-only RLS policies on all public tables
-4. Add citizen role on report submission (Supabase Auth → email verify)
-5. Build moderation role assignment in admin panel
-6. Set RLS: moderators see `status = 'pending_review'` reports only
-7. Add rate limiting on report submission endpoint (Redis sliding window)
+Supabase JWT + RLS + RBAC (or equivalent self-hosted).  
+Home: `server/routes/auth.ts` + middleware; Supabase project config in env.
 
 ---
 
 ## PIPELINE 10 — PUSH NOTIFICATIONS
 
-**Stack**: Firebase Cloud Messaging (Android + Web), APNs via Expo (iOS)
-
-**Trigger points**:
-- New scanner event (incident_type = fire/ems/police + confidence > 0.7) → 2km radius push
-- Community report approved within 1km of user's last location
-- High-severity incident cluster (>5 events, severity > 3) → 5km push
-- NOAA emergency weather alert for user's county
+FCM + APNs via Expo, geofenced PostGIS queries.  
+Home: `server/routes/notify.ts` (or later `services/notify-service`).
 
 ---
 
-## PIPELINE 11 — BUILD + PACKAGE
+## PIPELINE 11 — PACKAGING / MOBILE
 
-**Web** (Vite + Cloudflare Pages):
-```bash
-# apps/web
-pnpm build
-# → dist/ → deploy to Cloudflare Pages via wrangler
-# Environment: VITE_MAPBOX_TOKEN, VITE_API_URL, VITE_WS_URL
-# CDN: Cloudflare handles static assets + edge caching
-# Code split: map bundle lazy-loaded, dashboard bundle inline
-```
-
-**Mobile** (Expo EAS):
-```bash
-# apps/mobile
-eas build --platform ios     --profile production
-eas build --platform android --profile production
-eas submit --platform ios              # App Store Connect
-eas submit --platform android         # Google Play Console
-
-# OTA updates (skip app store for JS-only changes)
-eas update --branch production --message "Dashboard card fix"
-```
-
-**CI/CD** (GitHub Actions):
-```yaml
-# .github/workflows/deploy.yml
-on:
-  push:
-    branches: [main]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm typecheck && pnpm test
-
-  deploy-web:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: pnpm build --filter=web
-      - uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ secrets.CF_PAGES_TOKEN }}
-          projectName: civwatch-web
-          directory: apps/web/dist
-```
+Expo 52 under `apps/mobile` when Phase 11 starts. Web continues under `client/`.
 
 ---
 
-## DATA STORES (Single Source of Truth Per Domain)
+## Data stores (unchanged)
 
-| Store | Engine | Purpose |
-|---|---|---|
-| Primary DB | PostgreSQL 16 + PostGIS | Officials, transactions, reports, scanner events, map features |
-| Cache | Redis 7 | WebSocket presence, session state, pub/sub bus, rate limiting |
-| Time-series | TimescaleDB (Postgres extension) | Scanner event logs, incident timelines, finance transaction history |
-| Object storage | S3 / Cloudflare R2 | Report media, scanner audio clips, map tile caches |
-| Search | Meilisearch | Full-text search across officials, reports, events |
+| Store | Role |
+|-------|------|
+| PostgreSQL 16 + PostGIS | Primary system of record, spatial queries |
+| Redis 7 | Cache, pub/sub, rate limits, queues |
+| Meilisearch | Full-text search |
+| S3 / Cloudflare R2 | Object storage (report media, audio clips) |
 
----
-
-## BUILD SEQUENCE — CORRECT ORDER
-
-```
-1. Monorepo scaffold          → pnpm workspaces, shared packages, tsconfig
-2. Pipeline 9 (Auth)          → everything gates on auth; build this first
-3. Pipeline 2 (Dashboard)     → shell + DashCard base, all mocked data
-4. Pipeline 1 (Map)           → Mapbox style, avatar markers, category tabs, static GeoJSON
-5. Pipeline 7 (Ingestion)     → ETL workers running, Postgres populated
-6. Pipeline 4 (Political)     → FEC/OpenSecrets wired, PoliticalCard live
-7. Pipeline 3 (Scanner)       → RTL-SDR → faster-whisper → WebSocket → ScannerCard live
-8. Pipeline 5 (Reports)       → submission form, moderation, map pins
-9. Pipeline 6 (Surveillance)  → Overpass scraper, EFF Atlas load, heatmap live
-10. Pipeline 8 (Scoring)      → DBSCAN clusters, anomaly scores populate
-11. Pipeline 10 (Push)        → geofenced alerts firing on real events
-12. Pipeline 11 (Package)     → web → Cloudflare Pages, mobile → EAS, services → k8s
-```
+Defined in `docker-compose.yml`. Must be wired into `server/` before Phase 0 is closed.
 
 ---
 
-*CIVWATCH: WATCHTOWER — Buildable Pipeline Breakdown*
-*June 29, 2026*
+*Pipeline behaviors are stable. Process topology follows `ARCHITECTURE.md`. Last reconciled: 2026-09-27.*

@@ -2,24 +2,26 @@
   "name": "@civwatch/ui",
   "version": "0.0.1",
   "private": true,
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts --external react",
-    "dev": "tsup src/index.ts --format esm,cjs --dts --external react --watch",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@civwatch/types": "workspace:*",
+    "react": "^19.2.1"
   },
   "devDependencies": {
     "@types/react": "^19.2.1",
     "@types/react-dom": "^19.2.1",
-    "eslint": "^8.57.0",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.6",
-    "tsup": "^8.0.0",
-    "typescript": "^5.2.2"
-  },
-  "dependencies": {
-    "react": "^19.2.1"
+    "typescript": "5.6.3"
   }
 }

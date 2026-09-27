@@ -1,3 +1,4 @@
 packages:
-  - 'apps/*'
   - 'packages/*'
+  # apps/* reserved for future Expo mobile (Phase 11)
+  # client/ and server/ remain root-package code (modular monolith)

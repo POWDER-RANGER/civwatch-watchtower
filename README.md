@@ -1,4 +1,9 @@
-CIVWATCH: WATCHTOWER is a civic intelligence and verification platform for public-data monitoring, anomaly detection, and accountable oversight of government activity.
+[![Header](https://capsule-render.vercel.app/api?type=waving&color=0:0D1117,35:0D2818,70:1B5E20,100:00C853&height=300&section=header&text=WATCHTOWER&fontSize=70&fontColor=00FF88&animation=fadeIn&fontAlignY=42&desc=CIVWATCH+Civic+Oversight+Pillar&descColor=69F0AE&descSize=18&descAlignY=64)](https://github.com/POWDER-RANGER/civwatch-watchtower)
+
+![](https://img.shields.io/badge/STATUS-RECONSTRUCTION-FF9100?style=for-the-badge&labelColor=0D1117)
+![](https://img.shields.io/badge/LICENSE-MIT-00C853?style=for-the-badge&labelColor=0D1117)
+
+**CIVWATCH: WATCHTOWER** is a civic intelligence and verification platform for public-data monitoring, anomaly detection, and accountable oversight of government activity.
 
 It is designed to aggregate open and public-interest data, surface meaningful patterns, visualize civic conditions, and support community awareness through transparent reporting.
 
@@ -12,15 +17,7 @@ It is designed to aggregate open and public-interest data, surface meaningful pa
 
 ## Dashboard Pillar
 
-The main dashboard is built as a clean Apple iOS-style interface with a dark, stylized 3D map experience.
-
-The map view emphasizes:
-
-- Social and civic context.
-- Public activity overlays.
-- Weather and location awareness.
-- Real-time status updates.
-- Historical footprints, visits, and area-level patterns.
+The main dashboard is built as a clean Apple iOS-style interface with a dark, stylized 3D map experience, emphasizing social and civic context, public activity overlays, weather and location awareness, real-time status updates, and historical footprints and area-level patterns.
 
 ## Core Principles
 
@@ -32,14 +29,14 @@ The map view emphasizes:
 
 ## Key Modules
 
-- **Dashboard**: Primary command surface for civic overview.
-- **Map**: Stylized geospatial interface for public signals and reports.
-- **Citizen Reports**: Structured submissions from the community.
-- **Visualizations**: Heatmaps, overlays, and trend views.
-- **Data Storage**: Historical records and event retention.
-- **Anomaly Detection**: Pattern discovery and signal prioritization.
-- **Political Finance**: Tracking of political contributions, expenditures, and anomaly detection.
-- **Communications Log**: Emergency service and radio activity context.
+- **Dashboard** — primary command surface for civic overview.
+- **Map** — stylized geospatial interface for public signals and reports.
+- **Citizen Reports** — structured submissions from the community.
+- **Visualizations** — heatmaps, overlays, and trend views.
+- **Data Storage** — historical records and event retention.
+- **Anomaly Detection** — pattern discovery and signal prioritization.
+- **Political Finance** — contributions, expenditures, and anomaly detection.
+- **Communications Log** — emergency service and radio activity context.
 
 ## Tech Stack
 
@@ -50,20 +47,30 @@ The map view emphasizes:
 
 ## Project Identity
 
-**CIVWATCH** is the name of the platform.
-
-**WATCHTOWER** is the designation for the core civic oversight pillar of the application.
-
-Together, they define a system focused on watchful, structured, public-interest intelligence.
-
-## Mission
-
-CIVWATCH exists to help people understand what is happening around them through open data, careful analysis, and accessible presentation.
-
-It is built to make civic signals visible, understandable, and actionable.
+**CIVWATCH** is the platform. **WATCHTOWER** is the designation for the core civic oversight pillar.
 
 ## Status
 
 This repository is being reconstructed into a formal public identity and shippable application surface.
 
-## License: Private 
+## Further Reading
+
+- [ARCHITECTURE.md](./ARCHITECTURE.md) — system design
+- [PIPELINES.md](./PIPELINES.md) — ingestion pipelines
+- [MODULES.md](./MODULES.md) — module inventory
+- [ROADMAP.md](./ROADMAP.md) — roadmap
+- [STATUS.md](./STATUS.md) — current status
+
+## License
+
+MIT — see [LICENSE](./LICENSE).
+---
+
+## 🔔 Consolidation Notice
+
+CIVINTELLIGENCE is being consolidated into the unified CIVINTELLIGENCE platform. See the
+[consolidation charter and plan](https://github.com/POWDER-RANGER/CivilianIntelligence/blob/main/docs/CIVINTELLIGENCE.md).
+
+---
+
+**RF Intelligence. Civic Signals. Defensive Only.**

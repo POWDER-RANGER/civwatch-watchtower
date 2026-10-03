@@ -1,61 +1,37 @@
-# CIVWATCH: WATCHTOWER — Status & Needs List
+# WATCHTOWER — operational status
 
-> **Last updated:** 2026-09-27 (Phase 0 close-out fixes)  
-> **Phase:** 0 — Foundation (vertical slice + env load path)  
-> **Architecture:** Modular monolith (see `ARCHITECTURE.md`)
+**Updated:** 2026-10-03
+**Phase:** 0 foundation + API shell
+**Upstream:** [CivilianIntelligence](https://github.com/POWDER-RANGER/CivilianIntelligence)
 
----
+## Done
 
-## What this actually is right now
+- [x] Modular monorepo (`packages/*`, client, server)
+- [x] Postgres / PostGIS via docker-compose + health canary
+- [x] `GET /api/health` live DB check
+- [x] Shared types, config, core geo helpers
+- [x] CI typecheck workflow
+- [x] **Features API** — list/create map features
+- [x] **Reports API** — citizen report intake
+- [x] **CIVINT proxy** — alerts / awards / alpr soft-load
+- [x] **Home dashboard** — metrics + feature list wired to API
+- [x] README aligned with CIVINTELLIGENCE baseline
 
-A modular-monolith scaffold with working Postgres wiring, shared packages, health canary, CI typecheck gate, and `.env` loading for both server and migrations.
+## Next
 
----
+- [ ] Persist features/reports in Postgres (replace in-memory stores)
+- [ ] Mapbox/MapLibre canvas with feature layers
+- [ ] Auth gate for report moderation
+- [ ] Import `alpr_overpass.json` as native camera features
+- [ ] Commit regenerated `pnpm-lock.yaml` when operators run local `pnpm install`
 
-## Sector-by-sector status
-
-| Sector | Status |
-|---|---|
-| **Monorepo / workspaces** | Reconciled. `packages/*` are real workspace packages; client/server stay root code. |
-| **Packages** | `types`, `config`, `core`, `api-client` have real `src/`. `ui` export stub only (DashCard → Phase 2). |
-| **Infra / Postgres** | docker-compose + `pg` pool + `node-pg-migrate` + `001_init`. `.env` loaded via dotenv (config) and `--envPath .env` (migrate). |
-| **Server** | `GET /api/health` wired; returns 200/503 based on live DB check. |
-| **CI/CD** | `.github/workflows/ci.yml` — install + `pnpm check`. |
-| Auth → Mobile pipelines | **0%** |
-
----
-
-## Phase 0 checklist
-
-- [x] Architecture ADR + docs alignment
-- [x] Config landmines fixed
-- [x] Package skeletons with real `src/index.ts`
-- [x] Postgres client + first migration
-- [x] Health route with real DB canary
-- [x] Minimal CI (typecheck) — green after api-client Vite decoupling
-- [x] `.env` load path for migrate (`--envPath .env`) and server (`dotenv` in `@civwatch/config`)
-- [ ] Operator: commit regenerated `pnpm-lock.yaml`; restore CI `--frozen-lockfile` when ready
-
----
-
-## Documented close-out (should work end-to-end)
+## Runbook
 
 ```bash
 cp .env.example .env
-docker-compose up -d postgres   # or local Postgres matching DATABASE_URL
+docker compose up -d postgres
 pnpm install
-pnpm migrate
 pnpm dev:server
-curl -s localhost:3000/api/health   # expect 200, db: ok
+curl -s localhost:3000/api/health
+curl -s localhost:3000/api/features
 ```
-
-Stop Postgres → expect `503` and `"db":"error"`.
-
----
-
-## What's next
-
-- Phase 1 Auth or Phase 2 Dashboard shell
-- Commit lockfile after `pnpm install` picks up `dotenv`
-
-*CIVWATCH: WATCHTOWER — 2026-09-27*

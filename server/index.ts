@@ -4,6 +4,9 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { env } from "@civwatch/config";
 import { healthRouter } from "./routes/health.js";
+import { featuresRouter } from "./routes/features.js";
+import { reportsRouter } from "./routes/reports.js";
+import { civintRouter } from "./routes/civint.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,18 +17,29 @@ async function startServer() {
 
   app.use(express.json());
 
-  // API routes first (before SPA fallback)
-  app.use(healthRouter);
+  app.use("/api/health", healthRouter);
+  app.use("/api/features", featuresRouter);
+  app.use("/api/reports", reportsRouter);
+  app.use("/api/civint", civintRouter);
 
-  // Serve static files from dist/public in production
-  const staticPath =
-    env.NODE_ENV === "production"
-      ? path.resolve(__dirname, "public")
-      : path.resolve(__dirname, "..", "dist", "public");
+  app.get("/api", (_req, res) => {
+    res.json({
+      service: "civwatch-watchtower",
+      version: "0.1.0",
+      role: "Map-first civic oversight pillar of CIVINTELLIGENCE",
+      upstream: "https://github.com/POWDER-RANGER/CivilianIntelligence",
+      routes: [
+        "GET /api/health",
+        "GET|POST /api/features",
+        "GET|POST /api/reports",
+        "GET /api/civint/alerts|awards|alpr",
+      ],
+    });
+  });
 
+  const staticPath = path.resolve(__dirname, "../client/dist");
   app.use(express.static(staticPath));
 
-  // Handle client-side routing — serve index.html for non-API routes
   app.get("*", (req, res, next) => {
     if (req.path.startsWith("/api")) {
       res.status(404).json({ error: "Not found" });
@@ -37,9 +51,8 @@ async function startServer() {
   });
 
   const port = env.PORT;
-
   server.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}/`);
+    console.log(`WATCHTOWER listening on http://localhost:${port}/`);
   });
 }
 

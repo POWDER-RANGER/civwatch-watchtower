@@ -39,6 +39,8 @@ curl -s localhost:3000/api/civint/alerts
 
 CIVINT base URL override: `CIVINT_BASE_URL` (default: CivilianIntelligence `public/civint` on `main`).
 
+In production, `POST /api/features` and `POST /api/reports` require `Authorization: Bearer <WATCHTOWER_WRITE_TOKEN>`. Configure `CORS_ORIGINS` only for browser clients that need cross-origin access.
+
 ## Architecture
 
 ```
@@ -54,6 +56,10 @@ packages/
 ```
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md), [MODULES.md](./MODULES.md), [STATUS.md](./STATUS.md).
+
+## Integration
+
+CivilianIntelligence is the system of record. See its [cross-repo integration contract](https://github.com/POWDER-RANGER/CivilianIntelligence/blob/main/docs/CROSS_REPO_INTEGRATION.md) for runtime wiring and release gates.
 
 ## Principles
 

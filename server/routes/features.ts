@@ -50,17 +50,38 @@ featuresRouter.post("/", (req, res) => {
   const body = req.body ?? {};
   const longitude = Number(body.longitude);
   const latitude = Number(body.latitude);
-  if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) {
-    res.status(400).json({ error: "longitude_and_latitude_required" });
+  const category = String(body.category ?? "report") as MapFeatureCategory;
+  const allowedCategories = new Set<MapFeatureCategory>([
+    "incident", "camera", "report", "official", "footstep", "historical",
+  ]);
+  if (
+    !Number.isFinite(longitude) ||
+    longitude < -180 ||
+    longitude > 180 ||
+    !Number.isFinite(latitude) ||
+    latitude < -90 ||
+    latitude > 90
+  ) {
+    res.status(400).json({ error: "invalid_coordinates" });
     return;
   }
+  if (!allowedCategories.has(category)) {
+    res.status(400).json({ error: "invalid_category" });
+    return;
+  }
+  const sourceId =
+    body.sourceId == null ? null : String(body.sourceId).trim().slice(0, 128) || null;
+  const properties =
+    typeof body.properties === "object" && body.properties && !Array.isArray(body.properties)
+      ? body.properties
+      : {};
   const feature: Feature = {
-    id: `feat-${Date.now()}`,
-    sourceId: body.sourceId ?? null,
-    category: (body.category as MapFeatureCategory) || "report",
+    id: `feat-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    sourceId,
+    category,
     longitude,
     latitude,
-    properties: typeof body.properties === "object" && body.properties ? body.properties : {},
+    properties,
     confidence: normalizeConfidence(Number(body.confidence ?? 0.5)),
     createdAt: new Date().toISOString(),
   };

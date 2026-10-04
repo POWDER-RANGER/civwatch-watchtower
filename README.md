@@ -1,78 +1,111 @@
 # CIVWATCH WATCHTOWER
 
-**Map-first civic oversight** — the geospatial pillar of [CIVINTELLIGENCE](https://github.com/POWDER-RANGER/CivilianIntelligence).
+**Map-first civic oversight — the geospatial pillar of [CIVINTELLIGENCE](https://github.com/POWDER-RANGER/CivilianIntelligence).**
 
-Aggregates public-interest signals, citizen reports, and CIVINT snapshots (NWS alerts, federal surveillance awards, OSM ALPR points) onto a situational dashboard. Neutral scoring. Traceable sources. Defensive use only.
+Watchtower provides the map/report service surface for public-interest signals, citizen reports, and CIVINT public snapshots.
 
-> Status: **Phase 0 complete + operational API shell** — Postgres health canary, feature/report APIs, CIVINT soft-proxy, map-ready home surface.
+> **Status:** Phase 0 API baseline with integration hardening staged.
+
+## Role in the ecosystem
+
+**CivilianIntelligence is the system of record.**
+
+Watchtower owns:
+
+- map features
+- citizen reports
+- CIVINT alert / award / ALPR proxy access
+- map-oriented service health
+
+The unified hub can consume Watchtower health and feature data server-side.
 
 ## Quick start
 
-```bash
+~~~bash
 cp .env.example .env
-docker compose up -d postgres   # PostGIS 16
+docker compose up -d postgres
 pnpm install
-pnpm migrate                    # if scripts defined
-pnpm dev:server                 # API on :3000
-# optional Vite client
-pnpm dev
-```
+pnpm migrate
+pnpm dev:server
+# API: http://localhost:3000
+~~~
 
-```bash
+~~~bash
 curl -s localhost:3000/api/health
 curl -s localhost:3000/api
 curl -s localhost:3000/api/features
 curl -s localhost:3000/api/civint/alerts
-```
+~~~
 
-## API (current)
+## API
 
 | Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/api/health` | Process + DB canary |
-| GET | `/api` | Service descriptor |
-| GET/POST | `/api/features` | Map features (in-memory seed + write) |
-| GET/POST | `/api/reports` | Citizen reports queue |
-| GET | `/api/civint/alerts` | Soft-load CIVINT NWS alerts |
-| GET | `/api/civint/awards` | Soft-load USAspending awards |
-| GET | `/api/civint/alpr` | Soft-load OSM ALPR snapshot |
+|---|---|---|
+| GET | /api/health | Service + database health |
+| GET | /api | Service descriptor |
+| GET | /api/features | Map features |
+| POST | /api/features | Create a feature |
+| GET | /api/reports | Citizen reports |
+| POST | /api/reports | Submit a report |
+| GET | /api/civint/alerts | CIVINT NWS snapshot proxy |
+| GET | /api/civint/awards | CIVINT USAspending snapshot proxy |
+| GET | /api/civint/alpr | CIVINT OSM ALPR snapshot proxy |
 
-CIVINT base URL override: `CIVINT_BASE_URL` (default: CivilianIntelligence `public/civint` on `main`).
+## Security
 
-In production, `POST /api/features` and `POST /api/reports` require `Authorization: Bearer <WATCHTOWER_WRITE_TOKEN>`. Configure `CORS_ORIGINS` only for browser clients that need cross-origin access.
+The integration branch adds:
+
+- security response headers
+- bounded JSON request bodies
+- request rate limiting
+- explicit CORS allowlisting
+- production bearer authentication for feature/report writes
+- coordinate, category, and text validation
+
+Production configuration:
+
+~~~dotenv
+CORS_ORIGINS=https://your-approved-client.example
+WATCHTOWER_WRITE_TOKEN=<strong-random-secret>
+CIVINT_BASE_URL=https://raw.githubusercontent.com/POWDER-RANGER/CivilianIntelligence/main/public/civint
+~~~
+
+When NODE_ENV=production, write operations fail closed if WATCHTOWER_WRITE_TOKEN is not configured.
 
 ## Architecture
 
-```
-client/          React + Vite dashboard (Home situational surface)
-server/          Express API
-  routes/        health, features, reports, civint
+~~~text
+client/
+server/
+  routes/
+  middleware/
 packages/
-  types/         shared domain types
-  config/        env (zod + dotenv)
-  core/          haversine, confidence normalize
-  api-client/    typed fetch helpers
-  ui/            shared UI stubs
-```
-
-See [ARCHITECTURE.md](./ARCHITECTURE.md), [MODULES.md](./MODULES.md), [STATUS.md](./STATUS.md).
+  types/
+  config/
+  core/
+  api-client/
+  ui/
+~~~
 
 ## Integration
 
-CivilianIntelligence is the system of record. See its [cross-repo integration contract](https://github.com/POWDER-RANGER/CivilianIntelligence/blob/main/docs/CROSS_REPO_INTEGRATION.md) for runtime wiring and release gates.
+CIVINTELLIGENCE consumes:
 
-## Principles
+- GET /api/health
+- GET /api/features
 
-- Public-interest first; neutral analysis over spin
-- Evidence-based — every layer cites a source type
-- Soft-fail remote feeds so the tower stays up
-- **Defensive only** — community awareness, not targeting
+See the [cross-repo integration contract](https://github.com/POWDER-RANGER/CivilianIntelligence/blob/main/docs/CROSS_REPO_INTEGRATION.md).
 
-## Consolidation
+## Development status
 
-Watchtower merges into CIVINTELLIGENCE as the map/oversight module. Charter:
-https://github.com/POWDER-RANGER/CivilianIntelligence/blob/main/docs/CIVINTELLIGENCE.md
+Feature/report persistence and the full production mapping layer remain future work. This repository's README does not treat those pending phases as complete.
+
+## Related repositories
+
+- [CivilianIntelligence](https://github.com/POWDER-RANGER/CivilianIntelligence) — system of record
+- [Cell Titan](https://github.com/POWDER-RANGER/civwatch-cell-titan) — defensive RF pillar
+- [CIVWATCH](https://github.com/POWDER-RANGER/CIVWATCH) — migration source
 
 ## License
 
-MIT — built for citizens, by citizens.
+MIT

@@ -4,7 +4,7 @@
 
 Watchtower provides the map/report service surface for public-interest signals, citizen reports, and CIVINT public snapshots.
 
-> **Status:** Phase 0 API baseline with integration hardening staged.
+> **Status:** Phase 0 API baseline; integration hardening merged. Automated CI validation is currently blocked by a reproducible setup/logging failure.
 
 ## Role in the ecosystem
 
@@ -53,7 +53,7 @@ curl -s localhost:3000/api/civint/alerts
 
 ## Security
 
-The integration branch adds:
+The merged integration adds:
 
 - security response headers
 - bounded JSON request bodies
@@ -98,7 +98,9 @@ See the [cross-repo integration contract](https://github.com/POWDER-RANGER/Civil
 
 ## Development status
 
-Feature/report persistence and the full production mapping layer remain future work. This repository's README does not treat those pending phases as complete.
+Feature/report persistence and the full production mapping layer remain future work. The integration hardening is merged, but automated CI validation is currently blocked before executable workflow steps. Do not interpret a successful repository merge as production readiness.
+
+See the [CI runner incident record](https://github.com/POWDER-RANGER/CivilianIntelligence/blob/main/docs/CI_RUNNER_INCIDENT_2026-10-04.md).
 
 ## Related repositories
 

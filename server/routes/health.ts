@@ -4,7 +4,7 @@ import { checkDb } from "../db/pool.js";
 
 export const healthRouter = Router();
 
-healthRouter.get("/api/health", async (_req: Request, res: Response) => {
+healthRouter.get("/", async (_req: Request, res: Response) => {
   const dbOk = await checkDb();
   const body: HealthResponse = {
     status: dbOk ? "ok" : "error",

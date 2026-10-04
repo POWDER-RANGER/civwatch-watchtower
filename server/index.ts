@@ -7,6 +7,7 @@ import { healthRouter } from "./routes/health.js";
 import { featuresRouter } from "./routes/features.js";
 import { reportsRouter } from "./routes/reports.js";
 import { civintRouter } from "./routes/civint.js";
+import { cors, rateLimit, requireWriteAuth, securityHeaders } from "./middleware/security.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,11 +16,16 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
 
-  app.use(express.json());
+  app.disable("x-powered-by");
+  app.use(express.json({ limit: "64kb" }));
+  app.use(securityHeaders);
+  app.use(rateLimit);
+  const allowedOrigins = (process.env.CORS_ORIGINS ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+  app.use(cors(allowedOrigins));
 
   app.use("/api/health", healthRouter);
-  app.use("/api/features", featuresRouter);
-  app.use("/api/reports", reportsRouter);
+  app.use("/api/features", requireWriteAuth, featuresRouter);
+  app.use("/api/reports", requireWriteAuth, reportsRouter);
   app.use("/api/civint", civintRouter);
 
   app.get("/api", (_req, res) => {

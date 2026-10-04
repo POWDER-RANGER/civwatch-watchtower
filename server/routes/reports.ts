@@ -15,18 +15,30 @@ reportsRouter.get("/", (_req, res) => {
 reportsRouter.post("/", (req, res) => {
   const body = req.body ?? {};
   const title = String(body.title ?? "").trim();
+  const reportBody = body.body == null ? null : String(body.body).trim();
+  const category = String(body.category ?? "general").trim().slice(0, 64);
   const longitude = Number(body.longitude);
   const latitude = Number(body.latitude);
-  if (!title || !Number.isFinite(longitude) || !Number.isFinite(latitude)) {
-    res.status(400).json({ error: "title_longitude_latitude_required" });
+  if (
+    !title ||
+    title.length > 240 ||
+    (reportBody != null && reportBody.length > 10_000) ||
+    !Number.isFinite(longitude) ||
+    longitude < -180 ||
+    longitude > 180 ||
+    !Number.isFinite(latitude) ||
+    latitude < -90 ||
+    latitude > 90
+  ) {
+    res.status(400).json({ error: "invalid_report" });
     return;
   }
   const report: Report = {
     id: `rpt-${Date.now()}`,
     userId: null,
-    category: String(body.category ?? "general"),
+    category,
     title,
-    body: body.body != null ? String(body.body) : null,
+    body: reportBody,
     longitude,
     latitude,
     status: "pending",

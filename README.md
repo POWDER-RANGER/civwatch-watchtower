@@ -120,3 +120,11 @@ MIT
 The normalized surveillance proxy treats `state=unavailable` as an upstream failure
 and a valid empty snapshot as a successful feed with zero elements. Consumers should use
 the explicit `state` field rather than interpreting `count=0` as an outage.
+
+
+### Live ALPR tile source
+
+Watchtower exposes `/api/civint/alpr/tiles`, proxying the current FlockHopper/DeFlock
+TileJSON by default. This keeps the national ALPR dataset upstream-owned and current rather
+than copying it into Watchtower. Set `CIVINT_ALPR_TILEJSON_URL` to select a compatible
+TileJSON source.

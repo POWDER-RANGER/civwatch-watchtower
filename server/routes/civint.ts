@@ -84,3 +84,10 @@ civintRouter.get("/surveillance", async (_req, res) => {
   const data = await fetchCivintSurveillance();
   res.json({ source: "civint", ...data, ok: data.elements.length > 0 });
 });
+
+
+civintRouter.get("/sources", async (_req, res) => {
+  const data = (await softGet("sources.json")) as { sources?: unknown[] } | null;
+  const sources = Array.isArray(data?.sources) ? data.sources : [];
+  res.json({ source: "civint", sources, ok: Boolean(data) });
+});

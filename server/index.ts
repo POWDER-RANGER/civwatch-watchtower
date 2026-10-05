@@ -38,7 +38,7 @@ async function startServer() {
         "GET /api/health",
         "GET|POST /api/features",
         "GET|POST /api/reports",
-        "GET /api/civint/alerts|awards|alpr",
+        "GET /api/civint/alerts|awards|alpr|surveillance|sources",
       ],
     });
   });

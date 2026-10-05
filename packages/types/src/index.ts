@@ -17,7 +17,8 @@ export type MapFeatureCategory =
   | "report"
   | "official"
   | "footstep"
-  | "historical";
+  | "historical"
+  | "sensor";
 
 export type UserRole = "viewer" | "reporter" | "moderator" | "admin";
 

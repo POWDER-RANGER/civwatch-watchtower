@@ -12,10 +12,13 @@ Watchtower provides the map/report service surface for public-interest signals, 
 
 Watchtower owns:
 
-- map features
+- map feature presentation
 - citizen reports
-- CIVINT alert / award / ALPR proxy access
+- CIVINT alert / award / ALPR / normalized-surveillance proxy access
 - map-oriented service health
+
+Mapped surveillance infrastructure is sourced from CIVINT's normalized public feed. Watchtower does not scrape or
+maintain a second copy of DeFlock/FlockHopper databases.
 
 The unified hub can consume Watchtower health and feature data server-side.
 
@@ -49,7 +52,8 @@ curl -s localhost:3000/api/civint/alerts
 | POST | /api/reports | Submit a report |
 | GET | /api/civint/alerts | CIVINT NWS snapshot proxy |
 | GET | /api/civint/awards | CIVINT USAspending snapshot proxy |
-| GET | /api/civint/alpr | CIVINT OSM ALPR snapshot proxy |
+| GET | /api/civint/alpr | CIVINT OSM ALPR compatibility proxy |
+| GET | /api/civint/surveillance | CIVINT normalized surveillance feed proxy |
 
 ## Security
 

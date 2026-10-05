@@ -90,6 +90,28 @@ civintRouter.get("/surveillance", async (_req, res) => {
 });
 
 
+civintRouter.get("/alpr/tiles", async (_req, res) => {
+  const upstream =
+    process.env.CIVINT_ALPR_TILEJSON_URL ??
+    "https://tiles.dontgetflocked.com/cameras-us-hourly.json";
+  try {
+    const response = await fetch(upstream, { headers: { Accept: "application/json" } });
+    if (!response.ok) {
+      res.status(502).json({ source: "flockhopper", state: "unavailable", status: response.status });
+      return;
+    }
+    const body = await response.json();
+    res.json({
+      source: "flockhopper-deflock-tiles",
+      state: "live",
+      upstream,
+      tilejson: body,
+    });
+  } catch {
+    res.status(502).json({ source: "flockhopper", state: "unavailable" });
+  }
+});
+
 civintRouter.get("/sources", async (_req, res) => {
   const data = (await softGet("sources.json")) as { sources?: unknown[] } | null;
   const sources = Array.isArray(data?.sources) ? data.sources : [];

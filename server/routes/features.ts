@@ -74,8 +74,10 @@ featuresRouter.get("/", async (req, res) => {
   });
 });
 
-featuresRouter.get("/:id", (req, res) => {
-  const f = store.find((x) => x.id === req.params.id);
+featuresRouter.get("/:id", async (req, res) => {
+  const civint = await fetchCivintSurveillance();
+  const dynamic = civint.elements.map(surveillanceToFeature);
+  const f = [...dynamic, ...store].find((x) => x.id === req.params.id);
   if (!f) {
     res.status(404).json({ error: "not_found" });
     return;

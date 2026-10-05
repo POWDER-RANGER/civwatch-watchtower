@@ -3,18 +3,7 @@ import type { Feature, MapFeatureCategory } from "@civwatch/types";
 import { normalizeConfidence } from "@civwatch/core";
 import { fetchCivintSurveillance, type CivintSurveillanceAsset } from "./civint.js";
 
-const store: Feature[] = [
-  {
-    id: "feat-report-demo-1",
-    sourceId: "community",
-    category: "report",
-    longitude: -91.54,
-    latitude: 41.665,
-    properties: { label: "Community report (demo)", status: "approved", state: "demo" },
-    confidence: 0.5,
-    createdAt: new Date().toISOString(),
-  },
-];
+
 
 function surveillanceToFeature(asset: CivintSurveillanceAsset): Feature {
   const isSensor = asset.category === "gunshot_detector" || asset.category === "other";
@@ -60,7 +49,7 @@ featuresRouter.get("/", async (req, res) => {
   const category = req.query.category as MapFeatureCategory | undefined;
   const civint = await fetchCivintSurveillance();
   const mapped = civint.elements.map(surveillanceToFeature);
-  const items = [...mapped, ...store];
+  const items = mapped;
   const filtered = category ? items.filter((f) => f.category === category) : items;
   res.json({
     features: filtered,
@@ -77,7 +66,7 @@ featuresRouter.get("/", async (req, res) => {
 featuresRouter.get("/:id", async (req, res) => {
   const civint = await fetchCivintSurveillance();
   const dynamic = civint.elements.map(surveillanceToFeature);
-  const f = [...dynamic, ...store].find((x) => x.id === req.params.id);
+  const f = dynamic.find((x) => x.id === req.params.id);
   if (!f) {
     res.status(404).json({ error: "not_found" });
     return;

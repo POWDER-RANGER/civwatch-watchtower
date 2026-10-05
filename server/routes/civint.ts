@@ -82,7 +82,11 @@ export async function fetchCivintSurveillance(): Promise<{
 
 civintRouter.get("/surveillance", async (_req, res) => {
   const data = await fetchCivintSurveillance();
-  res.json({ source: "civint", ...data, ok: data.elements.length > 0 });
+  res.json({
+    source: "civint",
+    ...data,
+    ok: data.state !== "unavailable",
+  });
 });
 
 

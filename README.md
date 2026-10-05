@@ -115,3 +115,8 @@ See the [CI runner incident record](https://github.com/POWDER-RANGER/CivilianInt
 ## License
 
 MIT
+
+
+The normalized surveillance proxy treats `state=unavailable` as an upstream failure
+and a valid empty snapshot as a successful feed with zero elements. Consumers should use
+the explicit `state` field rather than interpreting `count=0` as an outage.

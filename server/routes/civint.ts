@@ -39,3 +39,48 @@ civintRouter.get("/alpr", async (_req, res) => {
     ok: Boolean(data),
   });
 });
+
+
+export type CivintSurveillanceAsset = {
+  type: "node";
+  id: number;
+  lat: number;
+  lon: number;
+  category: "alpr" | "gunshot_detector" | "camera" | "other";
+  surveillance_type: string | null;
+  operator: string | null;
+  manufacturer: string | null;
+  name: string | null;
+  zone: string | null;
+  direction: string | null;
+  tags: Record<string, string>;
+  confidence: number | null;
+  provenance?: {
+    source_id?: string;
+    source_url?: string;
+    observed_at?: string | null;
+    method?: string;
+    state?: string;
+    attribution?: string;
+  };
+};
+
+export async function fetchCivintSurveillance(): Promise<{
+  state: string;
+  asOf: string | null;
+  elements: CivintSurveillanceAsset[];
+}> {
+  const data = (await softGet("surveillance.json")) as
+    | { state?: string; as_of?: string | null; elements?: CivintSurveillanceAsset[] }
+    | null;
+  return {
+    state: data?.state ?? "unavailable",
+    asOf: data?.as_of ?? null,
+    elements: Array.isArray(data?.elements) ? data.elements : [],
+  };
+}
+
+civintRouter.get("/surveillance", async (_req, res) => {
+  const data = await fetchCivintSurveillance();
+  res.json({ source: "civint", ...data, ok: data.elements.length > 0 });
+});

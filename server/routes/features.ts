@@ -1,40 +1,77 @@
 import { Router } from "express";
 import type { Feature, MapFeatureCategory } from "@civwatch/types";
 import { normalizeConfidence } from "@civwatch/core";
+import { fetchCivintSurveillance, type CivintSurveillanceAsset } from "./civint.js";
 
 const store: Feature[] = [
-  {
-    id: "feat-alpr-demo-1",
-    sourceId: "osm",
-    category: "camera",
-    longitude: -91.5302,
-    latitude: 41.6611,
-    properties: {
-      label: "Mapped ALPR (demo)",
-      operator: "Flock Safety",
-      note: "Replace with civint alpr_overpass.json import",
-    },
-    confidence: 0.7,
-    createdAt: new Date().toISOString(),
-  },
   {
     id: "feat-report-demo-1",
     sourceId: "community",
     category: "report",
     longitude: -91.54,
     latitude: 41.665,
-    properties: { label: "Community report (demo)", status: "approved" },
+    properties: { label: "Community report (demo)", status: "approved", state: "demo" },
     confidence: 0.5,
     createdAt: new Date().toISOString(),
   },
 ];
 
+function surveillanceToFeature(asset: CivintSurveillanceAsset): Feature {
+  const isSensor = asset.category === "gunshot_detector" || asset.category === "other";
+  const label =
+    asset.name ||
+    asset.operator ||
+    (asset.category === "gunshot_detector"
+      ? "Gunshot detector"
+      : asset.category === "alpr"
+        ? "ALPR"
+        : "Surveillance camera");
+
+  return {
+    id: `civint-surveillance-${asset.id}`,
+    sourceId: asset.provenance?.source_id ?? "osm",
+    category: isSensor ? "sensor" : "camera",
+    longitude: asset.lon,
+    latitude: asset.lat,
+    properties: {
+      label,
+      state: asset.provenance?.state ?? "snapshot",
+      surveillanceType: asset.surveillance_type,
+      operator: asset.operator,
+      manufacturer: asset.manufacturer,
+      zone: asset.zone,
+      direction: asset.direction,
+      sourceUrl: asset.provenance?.source_url,
+      observedAt: asset.provenance?.observed_at ?? null,
+      method: asset.provenance?.method ?? "CIVINT normalized public source",
+      attribution: asset.provenance?.attribution ?? "© OpenStreetMap contributors",
+      tags: asset.tags,
+    },
+    confidence: normalizeConfidence(Number(asset.confidence ?? 0)),
+    createdAt: asset.provenance?.observed_at ?? new Date().toISOString(),
+  };
+}
+
+
+
 export const featuresRouter = Router();
 
-featuresRouter.get("/", (req, res) => {
+featuresRouter.get("/", async (req, res) => {
   const category = req.query.category as MapFeatureCategory | undefined;
-  const items = category ? store.filter((f) => f.category === category) : store;
-  res.json({ features: items, count: items.length });
+  const civint = await fetchCivintSurveillance();
+  const mapped = civint.elements.map(surveillanceToFeature);
+  const items = [...mapped, ...store];
+  const filtered = category ? items.filter((f) => f.category === category) : items;
+  res.json({
+    features: filtered,
+    count: filtered.length,
+    provenance: {
+      source: "CIVINTELLIGENCE",
+      state: civint.state,
+      asOf: civint.asOf,
+      surveillanceCount: mapped.length,
+    },
+  });
 });
 
 featuresRouter.get("/:id", (req, res) => {
@@ -52,7 +89,7 @@ featuresRouter.post("/", (req, res) => {
   const latitude = Number(body.latitude);
   const category = String(body.category ?? "report") as MapFeatureCategory;
   const allowedCategories = new Set<MapFeatureCategory>([
-    "incident", "camera", "report", "official", "footstep", "historical",
+    "incident", "camera", "report", "official", "footstep", "historical", "sensor",
   ]);
   if (
     !Number.isFinite(longitude) ||

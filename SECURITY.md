@@ -1,37 +1,44 @@
 # Security Policy
 
-## Reporting a Vulnerability
+## Project
 
-We take the security of CIVWATCH: WATCHTOWER seriously. If you discover a security vulnerability within this project, please report it to us as quickly as possible.
-
-**Please DO NOT open a public GitHub issue.** Public disclosure of vulnerabilities can put the entire community at risk.
-
-Instead, please send an email to `security@civwatch.org` (placeholder email).
-
-In your report, please include:
-
-- A clear and concise description of the vulnerability.
-- Steps to reproduce the vulnerability.
-- The potential impact of the vulnerability.
-- Any suggested mitigations or fixes (if you have them).
-
-We will acknowledge your email within 48 hours and provide a more detailed response within 7 days. We will keep you informed of the progress towards a fix and will notify you when the vulnerability has been resolved.
-
-## Disclosure Policy
-
-- We will work with you to understand and address the vulnerability.
-- We will not take legal action against individuals who discover and report vulnerabilities in good faith.
-- We will credit you for your discovery if you wish to be publicly acknowledged after the vulnerability has been resolved.
+civwatch-watchtower: TypeScript component of the CIVWATCH civic transparency ecosystem (the Watchtower layer).
 
 ## Supported Versions
 
-The following versions of CIVWATCH: WATCHTOWER are currently supported for security updates:
+No tagged, maintained release lines. Only the latest commit on the default branch (`main`) is supported. Fixes land on `main` only.
 
 | Version | Supported |
-|---------|-----------|
-| Latest  | Yes       |
-| Previous| No        |
+| --- | --- |
+| `main` (latest commit) | Yes |
+| Anything else | No |
 
-We encourage all users to keep their installations updated to the latest version to ensure they receive all security patches.
+## Reporting a Vulnerability
 
-Thank you for helping to keep CIVWATCH: WATCHTOWER secure.
+Do not open a public issue for a suspected vulnerability.
+
+Use GitHub private vulnerability reporting: repository **Security** tab, then **Report a vulnerability**. If that is unavailable, open a public issue titled "Security contact request" with no vulnerability details, and the maintainer will arrange a private channel.
+
+Include: affected component and commit, reproduction steps, impact assessment, and any proof-of-concept. Do not include real personal data or data from systems you do not own.
+
+## Expected Response Times
+
+Single-maintainer project. Targets, not guarantees:
+
+| Stage | Target |
+| --- | --- |
+| Acknowledgement | 5 business days |
+| Initial triage and severity assessment | 10 business days |
+| Status updates while open | Every 14 days |
+| Fix or mitigation for confirmed issues | Severity-dependent; critical prioritized first |
+
+Default coordinated disclosure window: 90 days from acknowledgement, extendable by agreement.
+
+## Security Maintainer
+
+Curtis Charles Farrar (GitHub: [@POWDER-RANGER](https://github.com/POWDER-RANGER)) is responsible for security review and disclosure handling. There is no separate security team. See the ecosystem-level [MAINTAINERS.md](https://github.com/POWDER-RANGER/CIVWATCH/blob/main/MAINTAINERS.md).
+
+## Scope Notes
+
+- No bug bounty is offered.
+- Non-security bugs: use public issues.

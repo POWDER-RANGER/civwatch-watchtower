@@ -55,83 +55,95 @@ export default function Home() {
     };
   }, []);
 
+  const apiOk = health?.status === "ok" || health?.db === "ok";
+
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      <header className="border-b border-zinc-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+    <div data-theme="ops" className="min-h-screen bg-background text-foreground font-sans">
+      <header className="border-b border-border px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">CIVWATCH</p>
-          <h1 className="text-2xl font-semibold tracking-tight text-emerald-400">Watchtower</h1>
-          <p className="text-sm text-zinc-400">Map-first civic oversight · CIVINTELLIGENCE pillar</p>
+          <h1 className="flex items-center gap-2.5 text-lg leading-none">
+            <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false" className="h-7 w-7 shrink-0">
+              <g fill="none" stroke="currentColor" strokeWidth="4.25" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6.5 18.5V10.5a4 4 0 0 1 4-4h8" />
+                <path d="M41.5 29.5v8a4 4 0 0 1-4 4h-8" />
+              </g>
+              <circle cx="24" cy="24" r="5" className="fill-primary" />
+            </svg>
+            <span className="font-semibold tracking-[0.06em]">CIVWATCH</span>
+            <span aria-hidden="true" className="h-[18px] w-px bg-foreground" />
+            <span className="font-normal">Platform</span>
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">Map and report services for the CIVWATCH web app</p>
         </div>
         <div className="flex gap-2 items-center">
           <span
-            className={`rounded-full border px-2 py-0.5 text-xs font-mono ${
-              health?.status === "ok" || health?.db === "ok"
-                ? "border-emerald-600 text-emerald-400"
-                : "border-zinc-600 text-zinc-400"
+            className={`inline-flex items-center gap-1.5 rounded-sm border px-2 py-0.5 text-xs font-medium ${
+              apiOk ? "border-[color:var(--success)] text-[color:var(--success)]" : "border-input text-muted-foreground"
             }`}
           >
-            {health ? `API ${health.status ?? health.db ?? "up"}` : "connecting…"}
+            <span aria-hidden="true">{apiOk ? "✓" : "…"}</span>
+            {health ? `API ${health.status ?? health.db ?? "up"}` : "Connecting"}
           </span>
           <Button asChild variant="outline" size="sm">
-            <a href="https://github.com/POWDER-RANGER/CivilianIntelligence" target="_blank" rel="noreferrer">
-              CIVINTELLIGENCE
+            <a href="https://civintelligence.onrender.com" target="_blank" rel="noreferrer">
+              CIVWATCH web app
             </a>
           </Button>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-8 space-y-6">
+      <main className="mx-auto max-w-6xl px-4 sm:px-6 py-8 space-y-6">
         {error && (
-          <p className="rounded-lg border border-amber-700/50 bg-amber-950/40 px-4 py-2 text-sm text-amber-200">
-            API unreachable ({error}). Start the server with <code className="font-mono">pnpm dev:server</code>.
+          <p className="rounded-md border border-[color:var(--warning)] bg-card px-4 py-2 text-sm">
+            <span className="font-medium text-[color:var(--warning)]">API unreachable</span> ({error}). Start the server with{" "}
+            <code className="font-mono">pnpm dev:server</code>.
           </p>
         )}
 
-        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Summary">
           {[
             { label: "Map features", value: String(features.length) },
-            { label: "CIVINT alerts", value: String(civint.alerts) },
-            { label: "CIVINT awards", value: String(civint.awards) },
-            { label: "CIVINT ALPR nodes", value: String(civint.alpr) },
+            { label: "Weather alerts (NWS)", value: String(civint.alerts) },
+            { label: "Federal awards (USAspending)", value: String(civint.awards) },
+            { label: "ALPR devices (OpenStreetMap)", value: String(civint.alpr) },
           ].map((m) => (
-            <div key={m.label} className="rounded-xl border border-zinc-800 bg-zinc-900/80 px-4 py-3">
-              <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">{m.label}</p>
-              <p className="mt-1 text-3xl font-semibold tabular-nums text-zinc-50">{m.value}</p>
+            <div key={m.label} className="rounded-md border border-border bg-card px-4 py-3">
+              <p className="text-xs text-muted-foreground">{m.label}</p>
+              <p className="mt-1 font-mono text-2xl font-medium tabular-nums">{m.value}</p>
             </div>
           ))}
         </section>
 
-        <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 overflow-hidden">
-          <div className="border-b border-zinc-800 px-4 py-3 flex items-center justify-between">
-            <h2 className="font-medium">Feature layer (API)</h2>
-            <span className="text-xs text-zinc-500 font-mono">GET /api/features</span>
+        <section className="rounded-md border border-border bg-card overflow-hidden">
+          <div className="border-b border-border px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-semibold">Feature layer</h2>
+            <span className="text-xs text-muted-foreground font-mono">GET /api/features</span>
           </div>
-          <ul className="divide-y divide-zinc-800">
+          <ul className="divide-y divide-border">
             {features.map((f) => (
               <li key={f.id} className="px-4 py-3 flex flex-wrap items-start justify-between gap-2 text-sm">
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium">{String(f.properties?.label ?? f.id)}</p>
-                  <p className="text-xs text-zinc-500 font-mono mt-0.5">
-                    {f.category} · {f.latitude.toFixed(4)}, {f.longitude.toFixed(4)}
+                  <p className="text-xs text-muted-foreground font-mono mt-0.5">
+                    {f.category} · {f.latitude.toFixed(5)}, {f.longitude.toFixed(5)}
                   </p>
                 </div>
-                <span className="text-xs font-mono text-zinc-400">conf {f.confidence ?? "—"}</span>
+                <span className="text-xs font-mono text-muted-foreground">Confidence {f.confidence ?? "—"}</span>
               </li>
             ))}
             {features.length === 0 && (
-              <li className="px-4 py-6 text-sm text-zinc-500">No features loaded.</li>
+              <li className="px-4 py-6 text-sm text-muted-foreground">No map features yet.</li>
             )}
           </ul>
         </section>
 
-        <p className="text-xs text-zinc-500 max-w-2xl leading-relaxed">
-          Watchtower is the map-first oversight pillar of{" "}
-          <a className="text-emerald-400 hover:underline" href="https://github.com/POWDER-RANGER/CivilianIntelligence">
-            CIVINTELLIGENCE
+        <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
+          CIVWATCH Platform serves map features and public-record snapshots (NWS alerts, USAspending awards,
+          OpenStreetMap ALPR nodes) to the{" "}
+          <a className="text-primary underline underline-offset-2" href="https://github.com/POWDER-RANGER/CivilianIntelligence">
+            CIVWATCH web app
           </a>
-          . CIVINT panels soft-load public snapshots (NWS alerts, USAspending awards, OSM ALPR). Public-interest
-          data only — defensive use.
+          . It documents public infrastructure and public records; it does not access camera feeds or track individuals.
         </p>
       </main>
     </div>

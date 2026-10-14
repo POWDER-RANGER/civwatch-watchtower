@@ -1,26 +1,34 @@
-# CIVWATCH WATCHTOWER
+# CIVWATCH Platform
 
-**Map-first civic oversight — the geospatial pillar of [CIVINTELLIGENCE](https://github.com/POWDER-RANGER/CivilianIntelligence).**
+**Map and report services for the [CIVWATCH web app](https://civintelligence.onrender.com).** Repository name: `civwatch-watchtower` (internal codename; not a public product name).
 
-Watchtower provides the map/report service surface for public-interest signals, citizen reports, and CIVINT public snapshots.
+The Platform serves map features, citizen reports and public-record snapshots (NWS alerts, USAspending awards, OpenStreetMap ALPR nodes) to the CIVWATCH web app. It documents public infrastructure and public records; it does not access camera feeds or track individuals.
 
 > **Status:** Phase 0 API baseline; integration hardening merged. Automated CI validation is currently blocked by a reproducible setup/logging failure.
 
-## Role in the ecosystem
+## Role in CIVWATCH
 
-**CivilianIntelligence is the system of record.**
-
-Watchtower owns:
+[CivilianIntelligence](https://github.com/POWDER-RANGER/CivilianIntelligence) (the CIVWATCH web app) is the system of record. The Platform owns:
 
 - map feature presentation
 - citizen reports
-- CIVINT alert / award / ALPR / normalized-surveillance proxy access
+- proxy access to the web app's public alert, award, ALPR and normalized surveillance snapshots (API paths keep their `/api/civint/` prefix)
 - map-oriented service health
 
-Mapped surveillance infrastructure is sourced from CIVINT's normalized public feed. Watchtower does not scrape or
-maintain a second copy of DeFlock/FlockHopper databases.
+Mapped surveillance infrastructure comes from the web app's normalized public feed. The Platform does not scrape or keep a second copy of DeFlock/FlockHopper data.
 
-The unified hub can consume Watchtower health and feature data server-side.
+## Design system
+
+`packages/ui` carries **CIVWATCH Design Standard v2**:
+
+| File | Use |
+|---|---|
+| `packages/ui/tokens/civwatch-tokens.v2.json` | W3C DTCG 2025.10 source tokens (ops dark + editorial light) |
+| `packages/ui/src/tokens.css` | The same tokens as CSS custom properties |
+| `packages/ui/src/tokens.ts` | Category colors, glyphs and basemap values for Mapbox GL / MapLibre paint properties |
+| `packages/ui/src/view-cone.ts` | Geodesic camera view cones (bearing + field of view + range) as GeoJSON |
+
+Map categories always pair an Okabe-Ito color with a glyph; never encode a category by color alone.
 
 ## Quick start
 
@@ -93,7 +101,7 @@ packages/
 
 ## Integration
 
-CIVINTELLIGENCE consumes:
+The CIVWATCH web app consumes:
 
 - GET /api/health
 - GET /api/features
@@ -108,9 +116,9 @@ See the [CI runner incident record](https://github.com/POWDER-RANGER/CivilianInt
 
 ## Related repositories
 
-- [CivilianIntelligence](https://github.com/POWDER-RANGER/CivilianIntelligence) — system of record
-- [Cell Titan](https://github.com/POWDER-RANGER/civwatch-cell-titan) — defensive RF pillar
-- [CIVWATCH](https://github.com/POWDER-RANGER/CIVWATCH) — migration source
+- [CivilianIntelligence](https://github.com/POWDER-RANGER/CivilianIntelligence) — CIVWATCH web app, system of record
+- [civwatch-cell-titan](https://github.com/POWDER-RANGER/civwatch-cell-titan) — CIVWATCH Cell Monitor
+- [CIVWATCH](https://github.com/POWDER-RANGER/CIVWATCH) — project site and legacy source
 
 ## License
 
@@ -124,9 +132,9 @@ the explicit `state` field rather than interpreting `count=0` as an outage.
 
 ### Live ALPR tile source
 
-Watchtower exposes `/api/civint/alpr/tiles`, proxying the current FlockHopper/DeFlock
+The Platform exposes `/api/civint/alpr/tiles`, proxying the current FlockHopper/DeFlock
 TileJSON by default. This keeps the national ALPR dataset upstream-owned and current rather
-than copying it into Watchtower. Set `CIVINT_ALPR_TILEJSON_URL` to select a compatible
+than copying it into the Platform. Set `CIVINT_ALPR_TILEJSON_URL` to select a compatible
 TileJSON source.
 
 
@@ -134,11 +142,11 @@ TileJSON source.
 
 ## Public platform status — October 2026
 
-**CIVINTELLIGENCE is live on the public web and its REST/API surface is active.**
+**The CIVWATCH web app is live and its REST/API surface is active.**
 
 **Public site:** https://civintelligence.onrender.com
 
-The web platform is now the working reference implementation for the CIVWATCH ecosystem: the core application, public-data surfaces, evidence/provenance model, specialized pillars, and integration boundaries are being exercised through the deployed CIVINTELLIGENCE service.
+The web platform is now the working reference implementation for the CIVWATCH ecosystem: the core application, public-data surfaces, evidence/provenance model, specialized pillars, and integration boundaries are being exercised through the deployed CIVWATCH web app.
 
 ### Applications are next
 
@@ -156,14 +164,14 @@ The existing Flutter client and service boundaries give the ecosystem a head sta
 
 ### How quickly this came together
 
-The current milestone is notable because the ecosystem moved from a multi-repository architecture and integration plan to a functioning public platform in a short development window. The difficult architectural work — ownership boundaries, public-data ingestion, REST contracts, evidence/provenance rules, Watchtower/Cell Titan integration, and the user-facing desk model — is already substantially established.
+The current milestone is notable because the ecosystem moved from a multi-repository architecture and integration plan to a functioning public platform in a short development window. The difficult architectural work — ownership boundaries, public-data ingestion, REST contracts, evidence/provenance rules, Platform/Cell Monitor integration, and the user-facing desk model — is already substantially established.
 
-That means the next step should be treated as **client delivery on top of an operating platform**. The web application is the reference surface; native clients become additional presentation and interaction layers over the same CIVINTELLIGENCE contracts.
+That means the next step should be treated as **client delivery on top of an operating platform**. The web application is the reference surface; native clients become additional presentation and interaction layers over the same CIVWATCH contracts.
 
 > **Build once at the platform layer. Deliver many clients at the edge.**
 
 ### Ecosystem rule
 
-CIVINTELLIGENCE remains the system of record. Specialized repositories retain clear ownership of their domains, while clients consume stable public/service contracts. Legacy and predecessor repositories remain valuable migration/reference material but are not silently represented as unified production capabilities.
+The CIVWATCH web app remains the system of record. Specialized repositories retain clear ownership of their domains, while clients consume stable public/service contracts. Legacy and predecessor repositories remain valuable migration/reference material but are not silently represented as unified production capabilities.
 
 **Status discipline:** live means exposed and usable; available means implemented and integrated; in progress means actively being built; planned means not yet shipped. No synthetic or unavailable source is represented as live evidence.

@@ -118,6 +118,7 @@ interface MapViewProps {
 
 export function MapView({
   className,
+  initialCenter,
   initialZoom = 12,
   onMapReady,
 }: MapViewProps) {

@@ -43,13 +43,17 @@ function surveillanceToFeature(asset: CivintSurveillanceAsset): Feature {
 
 
 
+// In-memory submissions from POST /. Demo seed data was removed in 41defa5;
+// the store itself must remain or POST throws a ReferenceError.
+const store: Feature[] = [];
+
 export const featuresRouter = Router();
 
 featuresRouter.get("/", async (req, res) => {
   const category = req.query.category as MapFeatureCategory | undefined;
   const civint = await fetchCivintSurveillance();
   const mapped = civint.elements.map(surveillanceToFeature);
-  const items = mapped;
+  const items = [...mapped, ...store];
   const filtered = category ? items.filter((f) => f.category === category) : items;
   res.json({
     features: filtered,
@@ -66,7 +70,7 @@ featuresRouter.get("/", async (req, res) => {
 featuresRouter.get("/:id", async (req, res) => {
   const civint = await fetchCivintSurveillance();
   const dynamic = civint.elements.map(surveillanceToFeature);
-  const f = dynamic.find((x) => x.id === req.params.id);
+  const f = [...dynamic, ...store].find((x) => x.id === req.params.id);
   if (!f) {
     res.status(404).json({ error: "not_found" });
     return;

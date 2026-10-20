@@ -11,20 +11,17 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # pnpm version is read from package.json "packageManager"; do not
+      # also set `version:` here (action-setup errors on duplicate versions).
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
 
-      # Non-frozen until lockfile is regenerated after Phase 0 dep adds
-      # (pg, node-pg-migrate, @civwatch/* workspace). After `pnpm install`
-      # locally and committing pnpm-lock.yaml, switch back to --frozen-lockfile.
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Typecheck
         run: pnpm check

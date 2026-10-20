@@ -120,6 +120,10 @@ See the [CI runner incident record](https://github.com/POWDER-RANGER/CivilianInt
 - [civwatch-cell-titan](https://github.com/POWDER-RANGER/civwatch-cell-titan) — CIVWATCH Cell Monitor
 - [CIVWATCH](https://github.com/POWDER-RANGER/CIVWATCH) — project site and legacy source
 
+## Documentation standard
+
+Follow the [CIVWATCH Documentation Standard](https://github.com/POWDER-RANGER/CivilianIntelligence/blob/main/docs/DOCUMENTATION_STANDARD.md) for attribution, generated artifacts, historical-status wording, and source/licence provenance.
+
 ## License
 
 MIT

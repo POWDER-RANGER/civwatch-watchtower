@@ -70,6 +70,17 @@ export function cors(allowedOrigins: string[]) {
   };
 }
 
+/** True when the request carries the configured WATCHTOWER_WRITE_TOKEN as a bearer token. */
+export function hasValidWriteToken(req: Request): boolean {
+  const configured = process.env.WATCHTOWER_WRITE_TOKEN?.trim() ?? "";
+  if (!configured) return false;
+  const [scheme, token] = (req.get("authorization") ?? "").split(/\s+/, 2);
+  if (scheme?.toLowerCase() !== "bearer" || !token) return false;
+  const a = Buffer.from(token);
+  const b = Buffer.from(configured);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
 export function requireWriteAuth(req: Request, res: Response, next: NextFunction): void {
   if (req.method === "GET") {
     next();

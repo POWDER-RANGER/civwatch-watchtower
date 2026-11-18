@@ -1,9 +1,9 @@
 # WATCHTOWER — operational status
 
-**Updated:** 2026-10-04
+**Updated:** 2026-10-24
 **Phase:** 0 foundation + API shell
 **Architecture:** Integrated into the CIVINTELLIGENCE system of record
-**Validation:** **CI/CD blocked at job initialization / log availability**
+**Validation:** CI green on `main` (typecheck; tests, coverage gate and build added in this change)
 **Upstream:** [CivilianIntelligence](https://github.com/POWDER-RANGER/CivilianIntelligence)
 
 ## Done
@@ -20,25 +20,16 @@
 - [x] README aligned with CIVINTELLIGENCE baseline
 - [x] Integration hardening merged into `main`
 
-## Validation blocker
+## Validation
 
-The primary CI job currently creates a GitHub Actions job and then fails before reporting executable steps. The same failure was reproduced on the integration PR and on `main`.
-
-Observed evidence:
-
-- PR CI run `37178951215`, job `111367384263`
-- Post-merge CI run `37179131159`, job `111368723414`
-- Job logs are unavailable at the repository layer and prior retrieval returned `BlobNotFound`
-- Watchtower dependency/security automation has executed successfully, so this is not evidence of a complete repository-wide Actions outage
-
-**Do not modify workflow YAML solely to chase this symptom.** The next trustworthy milestone is a CI run that reaches setup/checkout and produces usable logs.
-
-Central incident record: [CivilianIntelligence CI runner incident](https://github.com/POWDER-RANGER/CivilianIntelligence/blob/main/docs/CI_RUNNER_INCIDENT_2026-10-04.md).
+The 2026-10-04 CI runner blocker is resolved: CI runs on `main` complete successfully since 2026-10-20. Historical incident record: [CivilianIntelligence CI runner incident](https://github.com/POWDER-RANGER/CivilianIntelligence/blob/main/docs/CI_RUNNER_INCIDENT_2026-10-04.md).
 
 ## Next
 
-- [ ] Resolve CI runner/setup/logging blocker
-- [ ] Persist features/reports in Postgres (replace in-memory stores)
+- [x] Resolve CI runner/setup/logging blocker
+- [x] Persist features/reports in Postgres (migration 002; survives restart, verified)
+- [x] Test suite: 36 Vitest tests incl. PostGIS integration, 90% line coverage, 80% gate in CI
+- [x] Citizen reports moderated: anonymous readers see approved reports only
 - [ ] Mapbox/MapLibre canvas with feature layers
 - [ ] Auth gate for report moderation
 - [ ] Import `alpr_overpass.json` as native camera features
